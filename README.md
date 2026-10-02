@@ -12,7 +12,7 @@ The stack is Go with Fyne 2.8. It needs no browser extension, account, or networ
 
 ## Run
 
-Double-click `dist\Sniper.exe`, or pin it to the taskbar. The search box has focus.
+Build `dist\Sniper.exe` (see [Build from source](#build-from-source)), then double-click it or pin it to the taskbar. The search box has focus.
 
 | Key | Action |
 |---|---|
@@ -49,7 +49,7 @@ To try it with awkward text (emoji, tabs, Arabic, Japanese, line breaks), import
 
 ## Build from source
 
-You need Go 1.24 or later and a C compiler, because Fyne uses CGO. On Windows, install [MSYS2](https://www.msys2.org/) and its UCRT64 gcc, and put `C:\msys64\ucrt64\bin` on your `PATH`:
+You need Go 1.27 or later and a C compiler, because Fyne uses CGO. An older Go (1.21+) will download 1.27 automatically. On Windows, install [MSYS2](https://www.msys2.org/) and its UCRT64 gcc, and put `C:\msys64\ucrt64\bin` on your `PATH`:
 
 ```bash
 winget install --id GoLang.Go -e
@@ -67,6 +67,8 @@ go run ./cmd/clipcheck                            # real-clipboard check (needs 
 pwsh -NoProfile -File scripts/package.ps1         # builds dist\Sniper.exe
 ```
 
+Or install it straight from GitHub (still needs gcc): `go install github.com/tinkthemaker/sniper/cmd/sniper@latest`.
+
 `package.ps1` installs the `fyne` packaging tool if it is missing. To look at the UI without a display, run `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens` and open the PNGs in `internal/ui/testdata/screens/`.
 
 ## Documents
@@ -83,3 +85,7 @@ pwsh -NoProfile -File scripts/package.ps1         # builds dist\Sniper.exe
 | [07 Decision log](docs/07-decision-log.md) | Decisions and measurements |
 
 Direct insertion, sync, templates, tray, and global hotkeys are outside the MVP.
+
+## License
+
+[MIT](LICENSE)

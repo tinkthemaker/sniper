@@ -7,8 +7,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 
-	"sniper/internal/clipboard"
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/clipboard"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 // Storage is the subset of *store.Store the UI uses. It is an interface only so

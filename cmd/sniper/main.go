@@ -11,10 +11,10 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 
-	"sniper/internal/clipboard"
-	"sniper/internal/instance"
-	"sniper/internal/store"
-	"sniper/internal/ui"
+	"github.com/tinkthemaker/sniper/internal/clipboard"
+	"github.com/tinkthemaker/sniper/internal/instance"
+	"github.com/tinkthemaker/sniper/internal/store"
+	"github.com/tinkthemaker/sniper/internal/ui"
 )
 
 //go:embed Icon.png

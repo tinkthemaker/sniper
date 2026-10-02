@@ -11,8 +11,8 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/test"
 
-	"sniper/internal/snippets"
-	"sniper/internal/store"
+	"github.com/tinkthemaker/sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/store"
 )
 
 type recoveryHarness struct {

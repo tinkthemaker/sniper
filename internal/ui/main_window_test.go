@@ -6,7 +6,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/test"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 func TestStartupFocusTypingAndSelection(t *testing.T) {
@@ -93,7 +93,7 @@ func TestTappingARowSelectsIt(t *testing.T) {
 	if h.selectedTitle() != "Sign-off" {
 		t.Errorf("selected %q after selecting row 2", h.selectedTitle())
 	}
-	if h.m.previewTitle.Text != "Sign-off" || h.m.previewBody.Text != "Best regards,\nTalmage" {
+	if h.m.previewTitle.Text != "Sign-off" || h.m.previewBody.Text != "Best regards,\nTink" {
 		t.Errorf("preview = %q / %q", h.m.previewTitle.Text, h.m.previewBody.Text)
 	}
 }

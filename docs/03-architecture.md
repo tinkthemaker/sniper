@@ -5,7 +5,7 @@
 | Item | Choice |
 |---|---|
 | Language | Go. Use the newest stable release installed. The `go` directive in `go.mod` is the installed minor version, and must be at least `1.24`. |
-| Module path | `sniper` |
+| Module path | `github.com/tinkthemaker/sniper` |
 | UI | `fyne.io/fyne/v2` pinned to `v2.8.1` (or a newer v2.8.x patch) |
 | Lock | `github.com/gofrs/flock` (latest v0.x release at implementation time, pinned in `go.mod`) |
 | Packaging tool | `fyne.io/tools/cmd/fyne` (dev tool, not a module dependency) |

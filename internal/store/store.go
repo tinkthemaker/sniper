@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 const (

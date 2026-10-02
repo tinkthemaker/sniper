@@ -46,13 +46,13 @@ pwsh -NoProfile -File scripts/package.ps1
 
 To look at the UI without a display, run `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens`, then open the PNGs in `internal/ui/testdata/screens/`. Do this after every UI milestone.
 
-Fyne needs CGO and gcc. Both are installed on this machine: Go 1.27.0, and MSYS2 UCRT64 gcc at `C:\msys64\ucrt64\bin` on the user PATH. If a shell started before the install can't find them, refresh PATH with `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`. On another machine, M0 has the install commands. Ignore the old Go 1.23.6 copies in the Daemonbane projects' `.toolchain` folders; they are too old.
+Fyne needs CGO and gcc: Go 1.27 or later, and on Windows the MSYS2 UCRT64 gcc with `C:\msys64\ucrt64\bin` on `PATH`. M0 in the delivery plan has the install commands. If a shell started before the install can't find them, refresh PATH with `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`.
 
 If desktop-control (computer-use) tools are available and the user approves, use them to run the human checks 2–5 from the testing doc on this machine. Without them, list those checks as pending.
 
 ## Git
 
-The workspace is not a git repo yet, so M0 runs `git init`. Commit once per milestone with the messages given in the delivery plan. Never push. There is no remote.
+The repository lives at https://github.com/tinkthemaker/sniper (public). Commit in small, focused commits with conventional messages (`feat:`, `fix:`, `docs:`, `chore:`). Never push, force-push, or rewrite published history unless the user asks.
 
 ## Done means
 

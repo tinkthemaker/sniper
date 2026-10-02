@@ -12,7 +12,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 
-	"sniper/internal/clipboard"
+	"github.com/tinkthemaker/sniper/internal/clipboard"
 )
 
 var corpus = []string{

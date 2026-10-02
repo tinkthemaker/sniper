@@ -6,7 +6,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 // shownDialog records an open dialog so the modal guard and tests can see it.

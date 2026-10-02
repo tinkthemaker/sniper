@@ -7,8 +7,8 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
 
-	"sniper/internal/snippets"
-	"sniper/internal/store"
+	"github.com/tinkthemaker/sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/store"
 )
 
 // fileDialogSize leaves a 40 px margin around the window; Fyne's default is cramped.

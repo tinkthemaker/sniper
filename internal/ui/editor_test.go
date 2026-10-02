@@ -7,8 +7,8 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/test"
 
-	"sniper/internal/snippets"
-	"sniper/internal/store"
+	"github.com/tinkthemaker/sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/store"
 )
 
 // createViaKeyboard drives Ctrl+N, title, body, Ctrl+S exactly as a user would.

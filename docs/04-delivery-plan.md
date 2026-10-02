@@ -4,13 +4,13 @@ These milestones are ordered for an autonomous agent. Do them in order. A milest
 
 ## M0: Toolchain and skeleton
 
-1. Check the tools: `go version`, `gcc --version`, `git --version`. As of October 1, 2026, this machine has **Go 1.27.0** (`C:\Program Files\Go`) and **MSYS2 UCRT64 gcc 16.2.0** (`C:\msys64\ucrt64\bin`, on the user PATH), and a cgo test program builds. If a shell can't find them, refresh `PATH` as shown below. The install steps are kept for other machines.
+1. Check the tools: `go version`, `gcc --version`, `git --version`. Install whatever is missing:
    - Go: `winget install --id GoLang.Go -e --accept-source-agreements --accept-package-agreements`. Then refresh `PATH` in the session (`$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`).
    - gcc: `winget install --id MSYS2.MSYS2 -e`, then `C:\msys64\usr\bin\bash -lc "pacman -Syu --noconfirm; pacman -S --noconfirm mingw-w64-ucrt-x86_64-gcc"`. Prepend `C:\msys64\ucrt64\bin` to `PATH` for the session, and run `go env -w CGO_ENABLED=1`.
    - Verify: `go version`, `gcc --version`, and `go env CGO_ENABLED CC`.
    - If installation is not possible (no permission or no network), continue with the pure-Go milestones (M2, M3) using `CGO_ENABLED=0`, and report the missing tool as a blocker for M1 and M4–M7.
 2. `git init`. Add a `.gitignore` with `dist/`, `*.exe`, `*.test`, `*.out`, `coverage*`, and `internal/ui/testdata/screens/`. Add a `.gitattributes` with `* text=auto eol=lf`, `*.png binary`, and `*.ps1 text eol=crlf`.
-3. `go mod init sniper`. Set the `go` directive to the installed minor version (at least 1.24).
+3. `go mod init github.com/tinkthemaker/sniper`. Set the `go` directive to the installed minor version (at least 1.24).
 4. `go get fyne.io/fyne/v2@v2.8.1 github.com/gofrs/flock@latest`, then `go install fyne.io/tools/cmd/fyne@latest`.
 5. Create the package directories from [03-architecture.md](03-architecture.md) with `doc.go` package comments.
 6. Create `scripts/check.ps1` (spec in the testing doc) and `scripts/package.ps1`. `package.ps1` runs `go run ./tools/genicon` if `Icon.png` is missing, runs `fyne package -os windows -release` in `cmd/sniper`, moves the exe to `dist/`, and prints its size.

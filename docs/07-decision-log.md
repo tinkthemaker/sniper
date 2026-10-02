@@ -81,6 +81,10 @@ Revisit if: a Fyne release pins an older version that breaks the build.
 Decision: (1) `go.mod` says `go 1.27.0` (the installed toolchain), not just the minor version. (2) The sample import file is checked by a store test (`TestSampleImportFile`) and regenerated with `SNIPER_WRITE_SAMPLE=1 go test ./internal/store -run TestSampleImportFile`. (3) Corpus strings in Go source write zero-width and combining characters as `\u` escapes, because staticcheck (ST1018) rejects raw format characters and editors can silently change them.
 Why: small gaps between the docs and what the tools actually require.
 
+**D19 — 2026-10-01 — Prepared for public release**
+Decision: module path `github.com/tinkthemaker/sniper`, MIT license, commits authored with the GitHub no-reply address, and test screenshots git-ignored (a malformed `.gitignore` line had let them be committed).
+Why: the repository is published at https://github.com/tinkthemaker/sniper. The module path makes `go install …@latest` work.
+
 ---
 
 ## Measurements

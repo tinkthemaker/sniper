@@ -9,7 +9,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 // editorEntry forwards the editor's shortcuts (Ctrl+S, Escape) because a focused

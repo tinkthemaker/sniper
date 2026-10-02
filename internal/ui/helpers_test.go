@@ -13,8 +13,8 @@ import (
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/test"
 
-	"sniper/internal/snippets"
-	"sniper/internal/store"
+	"github.com/tinkthemaker/sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/store"
 )
 
 type fakeClipboard struct{ copied []string }
@@ -44,7 +44,7 @@ func sampleLibrary() snippets.Library {
 	lib := snippets.NewLibrary()
 	for _, s := range []struct{ title, body string }{
 		{"Greeting", "Hello,\nThanks for reaching out."},
-		{"Sign-off", "Best regards,\nTalmage"},
+		{"Sign-off", "Best regards,\nTink"},
 		{"Address", "1 Main St\nSpringfield"},
 		{"Zebra notes", "Mentions greeting in the body"},
 	} {

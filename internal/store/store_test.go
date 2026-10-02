@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 var corpus = []string{

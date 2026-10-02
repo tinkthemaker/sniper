@@ -9,7 +9,7 @@ import (
 
 	"fyne.io/fyne/v2"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 // TestScreens renders key states to PNGs for human review. It only runs when

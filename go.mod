@@ -1,4 +1,4 @@
-module sniper
+module github.com/tinkthemaker/sniper
 
 go 1.27.0
 

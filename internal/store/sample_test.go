@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 var corpusLabels = []string{

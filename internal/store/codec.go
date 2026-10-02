@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/snippets"
 )
 
 const (
