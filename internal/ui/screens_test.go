@@ -4,6 +4,7 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"fyne.io/fyne/v2"
@@ -66,5 +67,28 @@ func TestScreens(t *testing.T) {
 		h.m.win.Resize(fyne.NewSize(520, 600))
 		h.shortcut(shortcutDelete)
 		shot("05-delete-confirm", h.m.win)
+	})
+	t.Run("recovery", func(t *testing.T) {
+		bak := goodBackup(t)
+		rh := newRecoveryHarness(t, ptr("not json"), &bak)
+		rh.r.win.Resize(fyne.NewSize(520, 320))
+		shot("06-recovery", rh.r.win)
+	})
+	t.Run("recovery without backup", func(t *testing.T) {
+		rh := newRecoveryHarness(t, ptr("not json"), nil)
+		rh.r.win.Resize(fyne.NewSize(520, 320))
+		shot("07-recovery-no-backup", rh.r.win)
+	})
+	t.Run("about", func(t *testing.T) {
+		h := newHarness(t, sampleLibrary())
+		h.m.win.Resize(fyne.NewSize(520, 600))
+		h.m.showAbout()
+		shot("08-about", h.m.win)
+	})
+	t.Run("import confirm", func(t *testing.T) {
+		h := newHarness(t, sampleLibrary())
+		h.m.win.Resize(fyne.NewSize(520, 600))
+		h.m.importFrom(strings.NewReader(importJSON), "sample-import.json")
+		shot("09-import-confirm", h.m.win)
 	})
 }

@@ -68,6 +68,10 @@ Why: Windows `rename` replaces existing files, and two quarantines in the same s
 Decision: (1) Tab inside the multiline body inserts a tab character, because Fyne's `Entry.AcceptsTab()` is true for multiline entries; Shift+Tab does nothing there. Keyboard users leave the body with Ctrl+S or Escape, both of which work. Tab in the single-line title moves focus as normal, and Enter in the title moves focus to the body. (2) The modal guard counts open dialogs (`MainWindow.dialogs`, `modalOpen()`) instead of a single `modalOpen bool`, because the discard confirmation opens on top of the editor and a bool would clear when the inner dialog closed. (3) The discard confirmation uses the title `Discard changes?` and the message `Your changes to this snippet will be lost.`; the delete confirm button uses danger styling.
 Why: the UI spec asked for the Tab behavior to be recorded and did not give a discard message.
 
+**D16 — 2026-10-01 — Recovery, import and menu details**
+Decision: (1) When the primary file is missing (a backup exists), "Move damaged file aside…" has nothing to rename: the confirmation reads `snippets.json is missing, so there is nothing to move. Start with an empty library?` and the main window opens with the status `Started with an empty library.` The backup is left alone. (2) Templates in the UI spec of the form `<err>. …` strip a trailing period from `<err>`, because validation messages are full sentences and would otherwise print `..`. (3) The recovery window is not the app's master window; the main window is. (4) File and Help menu actions do nothing while a dialog is open, like the keyboard shortcuts. (5) Messages say `N snippets` even when N is 1, to match the UI spec strings exactly. (6) `FileDialog.Resize` panics before `Show`, so file dialogs are resized after they are shown. (7) Import checks the 10,000-snippet limit before asking for confirmation, so the user hears about it early; the check is repeated when applying.
+Why: the docs left these cases open; each choice is the smallest that keeps every acceptance criterion.
+
 ---
 
 ## Measurements

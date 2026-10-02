@@ -166,7 +166,7 @@ func (h *harness) confirmTop() {
 
 func (h *harness) dismissTop() {
 	h.t.Helper()
-	h.topDialog().dlg.Dismiss()
+	h.topDialog().dlg.(interface{ Dismiss() }).Dismiss()
 }
 
 // diskTitles reloads the library from disk, as a restart would.

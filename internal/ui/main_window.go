@@ -65,6 +65,7 @@ func ShowMain(d Deps, lib snippets.Library) *MainWindow {
 	m.win.SetContent(m.layout())
 	m.win.Resize(fyne.NewSize(520, 600))
 	m.registerShortcuts()
+	m.win.SetMainMenu(m.buildMenu())
 	m.refresh("")
 	m.win.Show()
 	m.win.Canvas().Focus(m.search)

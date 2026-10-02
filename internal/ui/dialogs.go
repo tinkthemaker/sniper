@@ -12,11 +12,17 @@ import (
 // shownDialog records an open dialog so the modal guard and tests can see it.
 type shownDialog struct {
 	title, message string
-	dlg            dialog.Dialog
+	dlg            presentable
+}
+
+// presentable is what present needs; fyne's file dialogs satisfy it but not dialog.Dialog.
+type presentable interface {
+	Show()
+	SetOnClosed(closed func())
 }
 
 // present shows d over the main window and tracks it until it closes.
-func (m *MainWindow) present(d dialog.Dialog, title, message string) {
+func (m *MainWindow) present(d presentable, title, message string) {
 	sd := &shownDialog{title: title, message: message, dlg: d}
 	m.dialogs = append(m.dialogs, sd)
 	d.SetOnClosed(func() { m.forget(sd) })
