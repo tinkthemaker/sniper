@@ -60,6 +60,10 @@ Why: snippets often contain `<`, `>`, and `&`, and backups should stay readable 
 Decision: validation messages are `Title is required.`, `Title is too long (N characters; limit 200).`, `Body is required.`, `Body is too long (N bytes; limit 65,536).`, `Title|Body contains characters that cannot be saved.` (invalid UTF-8 or NUL), and `The library is full (limit 10,000 snippets).` Record-level errors are prefixed `Snippet N: ` (stored library) or `record N: ` (append/import). `Excerpt(body, n)` returns at most n runes including the trailing `…`.
 Why: the spec gave only two example strings; these follow the same pattern and keep rows within the stated width.
 
+**D14 — 2026-10-01 — Quarantine details**
+Decision: `QuarantinePrimary` returns `""` and no error when there is no primary file (nothing to move), and never overwrites an existing damaged file: if `snippets.damaged-<ts>.json` exists it uses `snippets.damaged-<ts>-2.json`, `-3`, and so on.
+Why: Windows `rename` replaces existing files, and two quarantines in the same second would otherwise destroy the earlier damaged copy.
+
 ---
 
 ## Measurements
