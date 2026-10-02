@@ -72,6 +72,15 @@ Why: the UI spec asked for the Tab behavior to be recorded and did not give a di
 Decision: (1) When the primary file is missing (a backup exists), "Move damaged file aside…" has nothing to rename: the confirmation reads `snippets.json is missing, so there is nothing to move. Start with an empty library?` and the main window opens with the status `Started with an empty library.` The backup is left alone. (2) Templates in the UI spec of the form `<err>. …` strip a trailing period from `<err>`, because validation messages are full sentences and would otherwise print `..`. (3) The recovery window is not the app's master window; the main window is. (4) File and Help menu actions do nothing while a dialog is open, like the keyboard shortcuts. (5) Messages say `N snippets` even when N is 1, to match the UI spec strings exactly. (6) `FileDialog.Resize` panics before `Show`, so file dialogs are resized after they are shown. (7) Import checks the 10,000-snippet limit before asking for confirmation, so the user hears about it early; the check is repeated when applying.
 Why: the docs left these cases open; each choice is the smallest that keeps every acceptance criterion.
 
+**D17 — 2026-10-01 — Newer transitive dependencies**
+Decision: after `go get fyne.io/fyne/v2@v2.8.1`, also raise the indirect modules `golang.org/x/image` (0.24.0 → 0.46.0), `golang.org/x/net` (0.35.0 → 0.59.0), `golang.org/x/crypto` (0.33.0 → 0.57.0), plus the `x/sys` and `x/text` that came with them. No new direct dependency was added; only Fyne and gofrs/flock are direct.
+Why: `govulncheck` reported four vulnerabilities in the older `x/image`. Sniper decodes no untrusted images, but the fix is a one-line bump and `govulncheck ./...` now reports none.
+Revisit if: a Fyne release pins an older version that breaks the build.
+
+**D18 — 2026-10-01 — Spec text vs. code details found while building**
+Decision: (1) `go.mod` says `go 1.27.0` (the installed toolchain), not just the minor version. (2) The sample import file is checked by a store test (`TestSampleImportFile`) and regenerated with `SNIPER_WRITE_SAMPLE=1 go test ./internal/store -run TestSampleImportFile`. (3) Corpus strings in Go source write zero-width and combining characters as `\u` escapes, because staticcheck (ST1018) rejects raw format characters and editors can silently change them.
+Why: small gaps between the docs and what the tools actually require.
+
 ---
 
 ## Measurements
@@ -79,6 +88,6 @@ Why: the docs left these cases open; each choice is the smallest that keeps ever
 | Date | Metric | Value | Notes |
 |---|---|---|---|
 | 2026-10-01 | `BenchmarkSearch` (1,000 × 2 KB) | 3.2 ms/op (2.4 MB/op, 3,006 allocs) | M2, i7-13700K, 2-term query, worst case (every body lowercased) |
-| 2026-10-01 | `dist/Sniper.exe` size | 23.5 MiB (24,591,872 bytes) | M1 spike, `fyne package -release` |
-| | Cold start (human) | | |
-| | Working set (human) | | |
+| 2026-10-01 | `dist/Sniper.exe` size | 24.0 MiB (25,129,984 bytes) | M7, `fyne package -release`; the M1 spike was 23.5 MiB |
+| 2026-10-01 | Cold start | ~120 ms to a visible window (median of 5; first launch 361 ms) | **Agent-measured** with a polling script on the dev machine (i7-13700K); the human stopwatch run is still pending |
+| 2026-10-01 | Working set | ~85 MB after 2 s (84–85 MB on warm runs; 139 MB on the first) | **Agent-measured** with `Process.WorkingSet64`; Task Manager check by a human is still pending |

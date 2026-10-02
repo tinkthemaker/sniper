@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "snippets": [
+    {
+      "id": "00000000000000000000000000000001",
+      "title": "Corpus 01 – plain ASCII",
+      "body": "plain ASCII"
+    },
+    {
+      "id": "00000000000000000000000000000002",
+      "title": "Corpus 02 – multiline",
+      "body": "line one\nline two\n\nline four"
+    },
+    {
+      "id": "00000000000000000000000000000003",
+      "title": "Corpus 03 – tabs",
+      "body": "tab\tseparated\tvalues"
+    },
+    {
+      "id": "00000000000000000000000000000004",
+      "title": "Corpus 04 – spaces",
+      "body": "trailing spaces   \n  leading spaces"
+    },
+    {
+      "id": "00000000000000000000000000000005",
+      "title": "Corpus 05 – emoji",
+      "body": "emoji 👋🏽 family 👨‍👩‍👧 flag 🇯🇵"
+    },
+    {
+      "id": "00000000000000000000000000000006",
+      "title": "Corpus 06 – punctuation",
+      "body": "punctuation “quotes” ‘single’ — en–dash … © ® ™ € £ ¥"
+    },
+    {
+      "id": "00000000000000000000000000000007",
+      "title": "Corpus 07 – CJK",
+      "body": "日本語のテキスト / 中文文本 / 한국어 텍스트"
+    },
+    {
+      "id": "00000000000000000000000000000008",
+      "title": "Corpus 08 – RTL mixed",
+      "body": "العربية مع English mixed — עברית"
+    },
+    {
+      "id": "00000000000000000000000000000009",
+      "title": "Corpus 09 – Greek, Cyrillic, Hindi, Thai",
+      "body": "Ελληνικά, Кириллица, हिन्दी, ไทย"
+    },
+    {
+      "id": "0000000000000000000000000000000a",
+      "title": "Corpus 10 – combining marks",
+      "body": "combining: é ñ (decomposed)"
+    },
+    {
+      "id": "0000000000000000000000000000000b",
+      "title": "Corpus 11 – zero width",
+      "body": "zero width:​joiner‍ end"
+    },
+    {
+      "id": "0000000000000000000000000000000c",
+      "title": "Corpus 12 – json-ish",
+      "body": "json-ish: {\"a\": \"b\\\\n\"} <tag attr='x'> & %s %d"
+    }
+  ]
+}

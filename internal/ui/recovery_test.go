@@ -17,9 +17,8 @@ import (
 
 type recoveryHarness struct {
 	*harness
-	r      *recoveryWindow
-	dir    string
-	backup string
+	r   *recoveryWindow
+	dir string
 }
 
 // newRecoveryHarness lays out a data directory (nil means the file is absent),
