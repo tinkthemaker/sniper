@@ -19,7 +19,7 @@ Revisit if: saves become noticeably slow.
 Decision: before replacing `snippets.json`, write the bytes last loaded or saved by this process to `snippets.bak.json` (atomically). If the backup write fails, the save fails.
 Why: the in-memory bytes are known to be valid, so a damaged primary can never be copied over the backup.
 
-**D4 — 2026-10-01 — CRLF conversion on Windows (provisional)**
+**D4 — 2026-10-01 — CRLF conversion on Windows (confirmed)**
 Decision: `clipboard.ToPlatform` converts LF to CRLF on Windows.
 Why: CRLF is the Windows text convention. It is unconfirmed whether Fyne converts line endings itself.
 Revisit if: `cmd/clipcheck` shows `\r\r\n`. Then make the conversion the identity and update this entry with the result.
@@ -63,6 +63,6 @@ Why: snippets often contain `<`, `>`, and `&`, and backups should stay readable 
 | Date | Metric | Value | Notes |
 |---|---|---|---|
 | | `BenchmarkSearch` (1,000 × 2 KB) | | |
-| | `dist/Sniper.exe` size | | |
+| 2026-10-01 | `dist/Sniper.exe` size | 23.5 MiB (24,591,872 bytes) | M1 spike, `fyne package -release` |
 | | Cold start (human) | | |
 | | Working set (human) | | |
