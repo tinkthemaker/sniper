@@ -11,7 +11,16 @@ func ctrl(key fyne.KeyName) *desktop.CustomShortcut {
 	return &desktop.CustomShortcut{KeyName: key, Modifier: fyne.KeyModifierShortcutDefault}
 }
 
-var shortcutFind = ctrl(fyne.KeyF)
+var (
+	shortcutFind   = ctrl(fyne.KeyF)
+	shortcutNew    = ctrl(fyne.KeyN)
+	shortcutEdit   = ctrl(fyne.KeyE)
+	shortcutSave   = ctrl(fyne.KeyS)
+	shortcutDelete = &desktop.CustomShortcut{
+		KeyName:  fyne.KeyD,
+		Modifier: fyne.KeyModifierShortcutDefault | fyne.KeyModifierShift,
+	}
+)
 
 type shortcutAction struct {
 	shortcut *desktop.CustomShortcut
@@ -21,6 +30,9 @@ type shortcutAction struct {
 func (m *MainWindow) shortcutActions() []shortcutAction {
 	return []shortcutAction{
 		{shortcutFind, m.focusSearch},
+		{shortcutNew, m.newSnippet},
+		{shortcutEdit, m.editSelected},
+		{shortcutDelete, m.deleteSelected},
 	}
 }
 

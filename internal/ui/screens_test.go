@@ -53,4 +53,18 @@ func TestScreens(t *testing.T) {
 		h.typeText("nomatch")
 		shot("03-no-matches", h.m.win)
 	})
+	t.Run("editor with validation error", func(t *testing.T) {
+		h := newHarness(t, sampleLibrary())
+		h.m.win.Resize(fyne.NewSize(520, 600))
+		h.shortcut(shortcutNew)
+		h.typeText("Draft title")
+		h.shortcut(shortcutSave)
+		shot("04-editor-error", h.m.win)
+	})
+	t.Run("delete confirmation", func(t *testing.T) {
+		h := newHarness(t, sampleLibrary())
+		h.m.win.Resize(fyne.NewSize(520, 600))
+		h.shortcut(shortcutDelete)
+		shot("05-delete-confirm", h.m.win)
+	})
 }

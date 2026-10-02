@@ -1,11 +1,15 @@
 package ui
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/test"
 
@@ -56,14 +60,24 @@ func sampleLibrary() snippets.Library {
 // snippets they are saved first, so the file on disk matches the window.
 func newHarness(t *testing.T, lib snippets.Library) *harness {
 	t.Helper()
+	return newHarnessWrapping(t, lib, nil)
+}
+
+// newHarnessWrapping is newHarness with the store wrapped, to inject failures.
+func newHarnessWrapping(t *testing.T, lib snippets.Library, wrap func(*store.Store) Storage) *harness {
+	t.Helper()
 	h := &harness{t: t, app: test.NewTempApp(t), store: store.New(t.TempDir()), cb: &fakeClipboard{}}
 	if len(lib.Snippets) > 0 {
 		if err := h.store.Save(lib); err != nil {
 			t.Fatal(err)
 		}
 	}
+	var st Storage = h.store
+	if wrap != nil {
+		st = wrap(h.store)
+	}
 	h.deps = Deps{
-		App: h.app, Store: h.store, Clipboard: h.cb, Now: func() time.Time { return fixedNow },
+		App: h.app, Store: st, Clipboard: h.cb, Now: func() time.Time { return fixedNow },
 		OpenFolder: func(p string) error { h.opened = append(h.opened, p); return nil },
 	}
 	h.m = ShowMain(h.deps, lib)
@@ -119,3 +133,61 @@ func (h *harness) selectedTitle() string {
 }
 
 func equalStrings(a, b []string) bool { return strings.Join(a, "\x00") == strings.Join(b, "\x00") }
+
+// failingStorage fails Save while fail is set, leaving the real store untouched.
+type failingStorage struct {
+	*store.Store
+	fail bool
+}
+
+func (f *failingStorage) Save(lib snippets.Library) error {
+	if f.fail {
+		return errors.New("disk full")
+	}
+	return f.Store.Save(lib)
+}
+
+// topDialog returns the newest open dialog, or nil.
+func (h *harness) topDialog() *shownDialog {
+	if n := len(h.m.dialogs); n > 0 {
+		return h.m.dialogs[n-1]
+	}
+	return nil
+}
+
+func (h *harness) confirmTop() {
+	h.t.Helper()
+	d, ok := h.topDialog().dlg.(*dialog.ConfirmDialog)
+	if !ok {
+		h.t.Fatalf("top dialog is %T, not a confirm dialog", h.topDialog().dlg)
+	}
+	d.Confirm()
+}
+
+func (h *harness) dismissTop() {
+	h.t.Helper()
+	h.topDialog().dlg.Dismiss()
+}
+
+// diskTitles reloads the library from disk, as a restart would.
+func (h *harness) diskTitles() []string {
+	h.t.Helper()
+	res := store.New(h.store.Dir()).Load()
+	if res.State != store.StateOK {
+		h.t.Fatalf("reload state %v: %v", res.State, res.Err)
+	}
+	var out []string
+	for _, s := range res.Library.Snippets {
+		out = append(out, s.Title)
+	}
+	return out
+}
+
+func (h *harness) primaryBytes() string {
+	h.t.Helper()
+	b, err := os.ReadFile(filepath.Join(h.store.Dir(), store.FileName))
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}

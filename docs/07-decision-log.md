@@ -64,6 +64,10 @@ Why: the spec gave only two example strings; these follow the same pattern and k
 Decision: `QuarantinePrimary` returns `""` and no error when there is no primary file (nothing to move), and never overwrites an existing damaged file: if `snippets.damaged-<ts>.json` exists it uses `snippets.damaged-<ts>-2.json`, `-3`, and so on.
 Why: Windows `rename` replaces existing files, and two quarantines in the same second would otherwise destroy the earlier damaged copy.
 
+**D15 — 2026-10-01 — Editor details**
+Decision: (1) Tab inside the multiline body inserts a tab character, because Fyne's `Entry.AcceptsTab()` is true for multiline entries; Shift+Tab does nothing there. Keyboard users leave the body with Ctrl+S or Escape, both of which work. Tab in the single-line title moves focus as normal, and Enter in the title moves focus to the body. (2) The modal guard counts open dialogs (`MainWindow.dialogs`, `modalOpen()`) instead of a single `modalOpen bool`, because the discard confirmation opens on top of the editor and a bool would clear when the inner dialog closed. (3) The discard confirmation uses the title `Discard changes?` and the message `Your changes to this snippet will be lost.`; the delete confirm button uses danger styling.
+Why: the UI spec asked for the Tab behavior to be recorded and did not give a discard message.
+
 ---
 
 ## Measurements

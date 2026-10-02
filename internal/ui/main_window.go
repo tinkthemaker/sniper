@@ -40,7 +40,9 @@ type MainWindow struct {
 	selectedID string
 
 	syncing bool // true while we drive list.Select, so OnSelected ignores it
-	modals  int  // dialogs currently open over the window
+
+	editor  *editor        // the open editor, if any
+	dialogs []*shownDialog // dialogs open over the window, oldest first
 
 	search       *searchEntry
 	list         *resultList
@@ -94,9 +96,9 @@ func (m *MainWindow) build() {
 
 	m.copyBtn = widget.NewButton(labelCopy, m.copySelected)
 	m.copyBtn.Importance = widget.HighImportance
-	m.newBtn = widget.NewButton(labelNew, func() {})
-	m.editBtn = widget.NewButton(labelEdit, func() {})
-	m.deleteBtn = widget.NewButton(labelDelete, func() {})
+	m.newBtn = widget.NewButton(labelNew, m.newSnippet)
+	m.editBtn = widget.NewButton(labelEdit, m.editSelected)
+	m.deleteBtn = widget.NewButton(labelDelete, m.deleteSelected)
 	m.deleteBtn.Importance = widget.DangerImportance
 	m.status = widget.NewLabel("")
 	m.status.Truncation = fyne.TextTruncateEllipsis
@@ -236,5 +238,3 @@ func (m *MainWindow) focusSearch() {
 	m.win.Canvas().Focus(m.search)
 	m.search.TypedShortcut(&fyne.ShortcutSelectAll{})
 }
-
-func (m *MainWindow) modalOpen() bool { return m.modals > 0 }
