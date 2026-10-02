@@ -56,13 +56,17 @@ Why: Fyne dialogs share the window canvas, so without the guard, Ctrl+N inside t
 Decision: `Encode` uses `SetEscapeHTML(false)`.
 Why: snippets often contain `<`, `>`, and `&`, and backups should stay readable by hand.
 
+**D13 — 2026-10-01 — Validation messages and Excerpt length**
+Decision: validation messages are `Title is required.`, `Title is too long (N characters; limit 200).`, `Body is required.`, `Body is too long (N bytes; limit 65,536).`, `Title|Body contains characters that cannot be saved.` (invalid UTF-8 or NUL), and `The library is full (limit 10,000 snippets).` Record-level errors are prefixed `Snippet N: ` (stored library) or `record N: ` (append/import). `Excerpt(body, n)` returns at most n runes including the trailing `…`.
+Why: the spec gave only two example strings; these follow the same pattern and keep rows within the stated width.
+
 ---
 
 ## Measurements
 
 | Date | Metric | Value | Notes |
 |---|---|---|---|
-| | `BenchmarkSearch` (1,000 × 2 KB) | | |
+| 2026-10-01 | `BenchmarkSearch` (1,000 × 2 KB) | 3.2 ms/op (2.4 MB/op, 3,006 allocs) | M2, i7-13700K, 2-term query, worst case (every body lowercased) |
 | 2026-10-01 | `dist/Sniper.exe` size | 23.5 MiB (24,591,872 bytes) | M1 spike, `fyne package -release` |
 | | Cold start (human) | | |
 | | Working set (human) | | |
