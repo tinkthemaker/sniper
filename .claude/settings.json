@@ -1,0 +1,50 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build *)",
+      "Bash(go test *)",
+      "Bash(go vet *)",
+      "Bash(go run *)",
+      "Bash(go mod *)",
+      "Bash(go get *)",
+      "Bash(go install *)",
+      "Bash(go env *)",
+      "Bash(go version)",
+      "Bash(gofmt *)",
+      "Bash(gcc --version)",
+      "Bash(fyne package *)",
+      "Bash(git init)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(pwsh -NoProfile -File scripts/check.ps1 *)",
+      "Bash(pwsh -NoProfile -File scripts/package.ps1)",
+      "PowerShell(go build *)",
+      "PowerShell(go test *)",
+      "PowerShell(go vet *)",
+      "PowerShell(go run *)",
+      "PowerShell(go mod *)",
+      "PowerShell(go get *)",
+      "PowerShell(go install *)",
+      "PowerShell(go env *)",
+      "PowerShell(go version)",
+      "PowerShell(gofmt *)",
+      "PowerShell(gcc --version)",
+      "PowerShell(fyne package *)",
+      "PowerShell(git init)",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)",
+      "PowerShell(git status *)",
+      "PowerShell(git diff *)",
+      "PowerShell(git log *)",
+      "PowerShell(pwsh -NoProfile -File scripts/check.ps1 *)",
+      "PowerShell(pwsh -NoProfile -File scripts/package.ps1)"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "PowerShell(git push *)"
+    ]
+  }
+}

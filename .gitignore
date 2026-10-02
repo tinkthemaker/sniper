@@ -1,0 +1,6 @@
+dist/
+*.exe
+*.test
+*.out
+coverage*
+internal/ui/testdata/screens/.claude/
