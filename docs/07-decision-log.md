@@ -85,6 +85,17 @@ Why: small gaps between the docs and what the tools actually require.
 Decision: module path `github.com/tinkthemaker/sniper`, MIT license, commits authored with the GitHub no-reply address, and test screenshots git-ignored (a malformed `.gitignore` line had let them be committed).
 Why: the repository is published at https://github.com/tinkthemaker/sniper. The module path makes `go install …@latest` work.
 
+**D20 — 2026-10-02 — Editor Tab order fixed; hands-on verification run**
+Decision: the editor lays out its children in visual order (title, body, buttons) with `container.New(layout.NewBorderLayout(...), top, bodyRow, bottom)` instead of `container.NewBorder`, which puts the center (body) first. `TestEditorTabOrderIsTitleBodyButtons` guards it.
+Why: Fyne's Tab order follows child order, so Tab from Title went to Cancel and Save before Body. This was found during the hands-on run below. The headless tests missed it because they focus fields directly, and Enter in the title already jumped to the body.
+Hands-on run (dev machine, `dist\Sniper.exe`, driven through computer use): checks 2–5 in [06-testing.md](06-testing.md#human-verification) pass, except the browser paste.
+- **Import:** the confirmation text matches the spec, and all 12 snippets were imported.
+- **Notepad:** all 12 corpus snippets copied with the keyboard and pasted into Notepad match byte for byte.
+- **Persistence:** create, save and restart keep the data, and the backup is written on the second save.
+- **Second copy:** shows "already running"; OK exits it; the library is untouched.
+- **Recovery:** after `xx` is appended to the library, the recovery window appears; Restore makes the primary byte-identical to the backup.
+Still pending: the browser paste (no automated route from this environment: the built-in browser's Ctrl+V is simulated, computer use cannot type into browsers, and Claude in Chrome was not connected) and the clean-machine run (Windows Sandbox not installed).
+
 ---
 
 ## Measurements
@@ -95,3 +106,5 @@ Why: the repository is published at https://github.com/tinkthemaker/sniper. The 
 | 2026-10-01 | `dist/Sniper.exe` size | 24.0 MiB (25,129,984 bytes) | M7, `fyne package -release`; the M1 spike was 23.5 MiB |
 | 2026-10-01 | Cold start | ~120 ms to a visible window (median of 5; first launch 361 ms) | **Agent-measured** with a polling script on the dev machine (i7-13700K); the human stopwatch run is still pending |
 | 2026-10-01 | Working set | ~85 MB after 2 s (84–85 MB on warm runs; 139 MB on the first) | **Agent-measured** with `Process.WorkingSet64`; Task Manager check by a human is still pending |
+| 2026-10-02 | Cold start (packaged exe, 12-snippet library) | 152 ms to a visible window | D20 hands-on run, measured from `Start-Process` until the main window exists |
+| 2026-10-02 | Memory (packaged exe, 12-snippet library) | 87.4 MB working set, 114.2 MB private, after 2 s | D20 hands-on run; 129.5 MB working set on the very first launch of the session |

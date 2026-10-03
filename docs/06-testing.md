@@ -98,8 +98,6 @@ Practical notes:
 
 Required behaviors:
 
-Required behaviors:
-
 1. Startup focus is on search. Typing filters `Results()`, and the first result is selected.
 2. Down and Up move the selection and clamp at the ends. Enter copies the selected body (the fake clipboard receives it) and the status equals `Copied “<title>”.`
 3. Escape clears the query.
@@ -113,8 +111,8 @@ Required behaviors:
 11. Export writes decodable JSON to a buffer.
 12. Recovery: with a damaged primary and a valid backup, Restore opens the main window with the backup content. Move aside, then confirm, creates the damaged file and opens an empty main window.
 13. Empty-state labels appear for an empty library and for no matches. Copy, Edit, and Delete are disabled with no selection.
-
 14. Ctrl+N while the editor is open does nothing (modal guard).
+15. Editor Tab order is Title → Body → Cancel → Save, and Shift+Tab reverses it. Walk `Canvas().FocusNext()` and `FocusPrevious()`, which is what the real driver calls for Tab. Focusing fields directly would hide an order bug (D20).
 
 ### Visual review (screenshots without a display)
 
@@ -148,3 +146,24 @@ To help, the agent generates `testdata/sample-import.json` from the corpus (one 
 4. Corrupt `%AppData%\Sniper\snippets.json` (add `xx` at the end) and launch: the recovery window appears. Restore works.
 5. Do a keyboard-only pass of the whole main flow using the keyboard map.
 6. Record the exe size, cold-start time (stopwatch), and working-set memory (Task Manager) in the decision log.
+
+### Status (2026-10-02)
+
+| Item | Status |
+|---|---|
+| 1. Clean machine | **Pending**: needs Windows Sandbox or a second PC. |
+| 2. Import + paste | Import and **Notepad: passed** (12/12 byte-exact). **Browser `<textarea>`: pending.** |
+| 3. Persistence, second copy | **Passed** |
+| 4. Corrupt + recover | **Passed** |
+| 5. Keyboard-only pass | **Passed** after fixing the editor Tab order (D20). |
+| 6. Measurements | Agent-measured on the packaged exe (decision log). Task Manager and stopwatch confirmation pending. |
+
+Details are in decision log entry D20.
+
+### Notes for agents running these checks with computer use
+
+- **Blank screenshots:** on some Windows setups, computer-use screenshots come back as a solid `#1E1E1E` frame even for permitted apps ([anthropics/claude-code#91079](https://github.com/anthropics/claude-code/issues/91079)). Clicks and typing still work. Work around it by capturing the target window yourself (`System.Drawing.Graphics.CopyFromScreen` on the window's rectangle from `GetWindowRect`, after `SetProcessDPIAware`) and viewing the PNG.
+- **Windows stay buried:** `open_application` may not raise a window above maximized apps. `SwitchToThisWindow` followed by `SetForegroundWindow` on the process's main window handle does.
+- **Run a launched app by path:** a packaged exe outside the Start menu must be granted by its full path (for example `E:\...\dist\Sniper.exe`), not by name.
+- **Paste checks:** paste into Notepad, save to a file, and compare bytes. Don't trust a screenshot. Separate items with something you can split on even if typed keystrokes arrive out of order (`(\r\n)*@@@(\r\n)?`), and check the total length.
+- **Browser paste:** this needs a real paste into a real browser. The built-in browser pane's Ctrl+V is simulated, and computer use can't type into browsers.

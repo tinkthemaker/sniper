@@ -2,7 +2,7 @@
 
 Sniper is a compact Go desktop utility for Windows. Save reusable text, find it quickly, and copy it to the clipboard.
 
-**Status:** version 0.1.0 is implemented and its automated checks pass. A few checks need a human on a clean Windows machine; they are listed in [the decision log](docs/07-decision-log.md) and the testing doc ([docs/06-testing.md](docs/06-testing.md#human-verification)). Agents should start with [CLAUDE.md](CLAUDE.md).
+**Status:** version 0.1.0 is implemented. Its automated checks pass, and a hands-on run of the packaged exe passed (import, a byte-exact Notepad paste of all the test text, persistence, single instance, recovery, keyboard-only use). Still open: a paste into a browser, and a run on a clean Windows machine. See [the testing doc](docs/06-testing.md#human-verification). Agents should start with [CLAUDE.md](CLAUDE.md).
 
 ## What it does
 

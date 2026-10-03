@@ -88,7 +88,9 @@ func (m *MainWindow) openEditor(existing *snippets.Snippet) {
 	top := container.NewBorder(nil, nil, widget.NewLabel(labelTitle), nil, ed.title)
 	bodyRow := container.NewBorder(nil, nil, container.NewVBox(widget.NewLabel(labelBody)), nil, ed.body)
 	bottom := container.NewVBox(ed.errLabel, container.NewHBox(layout.NewSpacer(), ed.cancelBtn, save))
-	content := container.NewBorder(top, bottom, nil, nil, bodyRow)
+	// Tab order follows child order, and NewBorder puts the center first, so
+	// list the children in visual order: title, body, then the buttons.
+	content := container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, bodyRow, bottom)
 
 	ed.dlg = dialog.NewCustomWithoutButtons(heading, content, m.win)
 	size := m.win.Canvas().Size()

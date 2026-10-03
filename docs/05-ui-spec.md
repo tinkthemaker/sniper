@@ -79,6 +79,8 @@ A focused `widget.Entry` receives every shortcut and swallows the ones it does n
 
 Headless tests must prove that Ctrl+N works while search has focus, that Ctrl+S works while the body entry has focus, and that Ctrl+N does nothing while the editor is open.
 
+**Editor Tab order:** Title → Body → Cancel → Save. Fyne's Tab order follows the order of a container's children, and `container.NewBorder` puts the center object first. So build the editor with `container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, bodyRow, bottom)`, listing the children in visual order (D20).
+
 **Tab inside the multiline body:** keep Fyne's native behavior, whether it moves focus or inserts a tab. Tabs in pasted text are always preserved. Record which one Fyne does in the decision log. Ctrl+S and Escape must work in either case.
 
 ## Editor dialog

@@ -395,6 +395,28 @@ func TestToolbarButtonsOpenEditorsAndDelete(t *testing.T) {
 	}
 }
 
+// The real driver turns Tab into Canvas.FocusNext for widgets that don't accept
+// tabs, so walking FocusNext reproduces what a keyboard user gets.
+func TestEditorTabOrderIsTitleBodyButtons(t *testing.T) {
+	h := newHarness(t, snippets.NewLibrary())
+	h.shortcut(shortcutNew)
+	c := h.m.win.Canvas()
+	c.Focus(h.m.editor.title)
+	c.FocusNext()
+	if c.Focused() != h.m.editor.body {
+		t.Fatalf("Tab from title focused %T, want the body", c.Focused())
+	}
+	c.FocusNext()
+	if c.Focused() != h.m.editor.cancelBtn {
+		t.Fatalf("after the body, focus went to %T, want the Cancel button", c.Focused())
+	}
+	c.FocusPrevious()
+	c.FocusPrevious()
+	if c.Focused() != h.m.editor.title {
+		t.Errorf("Shift+Tab back from Cancel ended on %T, want the title", c.Focused())
+	}
+}
+
 func TestTabInBodyInsertsATab(t *testing.T) {
 	h := newHarness(t, snippets.NewLibrary())
 	h.shortcut(shortcutNew)
