@@ -41,10 +41,6 @@
       "PowerShell(git log *)",
       "PowerShell(pwsh -NoProfile -File scripts/check.ps1 *)",
       "PowerShell(pwsh -NoProfile -File scripts/package.ps1)"
-    ],
-    "deny": [
-      "Bash(git push *)",
-      "PowerShell(git push *)"
     ]
   }
 }
