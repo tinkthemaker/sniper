@@ -37,6 +37,7 @@ func newRecoveryHarness(t *testing.T, primary, backup *string) *recoveryHarness 
 	put(store.BackupName, backup)
 
 	h := &harness{t: t, app: test.NewTempApp(t), store: store.New(dir), cb: &fakeClipboard{}}
+	h.app.Settings().SetTheme(NewTheme())
 	h.deps = Deps{
 		App: h.app, Store: h.store, Clipboard: h.cb, Now: func() time.Time { return fixedNow },
 		OpenFolder: func(p string) error { h.opened = append(h.opened, p); return nil },

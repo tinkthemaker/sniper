@@ -23,6 +23,7 @@ var iconPNG []byte
 func main() {
 	a := app.NewWithID("app.sniper.desktop")
 	a.SetIcon(fyne.NewStaticResource("Icon.png", iconPNG))
+	a.Settings().SetTheme(ui.NewTheme())
 
 	if lock := start(a); lock != nil {
 		defer func() { _ = lock.Release() }()

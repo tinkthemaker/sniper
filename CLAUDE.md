@@ -35,6 +35,8 @@ pwsh -NoProfile -File scripts/check.ps1
 
 Use `-Quick` while iterating, and the full run before each milestone commit.
 
+**`dist/Sniper.exe` must always be fresh.** Both modes of `check.ps1` end by running `scripts/package.ps1`, which rebuilds the exe only when a source file is newer than it (use `-Force` to rebuild anyway) and restores `FyneApp.toml` so a rebuild never dirties the tree. So after any code change, run `check.ps1`, and never hand over or describe the exe without having done so.
+
 Other commands:
 
 ```bash
@@ -56,4 +58,4 @@ The repository lives at https://github.com/tinkthemaker/sniper (public). Commit 
 
 ## Done means
 
-Every milestone exit check passes, `go test ./...` is green, `gofmt -l .` is empty, `dist/Sniper.exe` exists, the README has run, backup, and build instructions, the decision log has its measurements, and the final report follows the delivery plan's format.
+Every milestone exit check passes, `go test ./...` is green, `gofmt -l .` is empty, `dist/Sniper.exe` exists and is newer than every source file (a passing `check.ps1` guarantees this), the README has run, backup, and build instructions, the decision log has its measurements, and the final report follows the delivery plan's format.

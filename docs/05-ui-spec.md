@@ -8,29 +8,58 @@ Title `Sniper`. Initial size 520×600. Resizable. Closing the window quits the a
 
 ```text
 ┌ File  Help ─────────────────────────────────────┐
+│ SNIPER  SNIPPETS                    12 IN LIBRARY│  ← header strip (iron surface)
+│─────────────────────────────────────────────────│  ← metal edge (1 px)
 │ [ Search snippets (Ctrl+F)                    ] │  ← searchEntry (focused at start)
-│ ┌─────────────────────────────────────────────┐ │
-│ │ Greeting                          (bold)    │ │  ← widget.List, row = title +
-│ │ Hello, thanks for reaching out…   (dim)     │ │    body excerpt (both truncated
-│ │ Sign-off                                    │ │    with ellipsis, one line each)
-│ │ Best regards,                               │ │
-│ ├──────────────── VSplit (0.45) ──────────────┤ │
-│ │ Greeting                          (bold)    │ │  ← preview title
-│ │ Hello,                                      │ │  ← preview body: Label, Selectable,
-│ │ Thanks for reaching out. …                  │ │    TextWrapWord, inside VScroll
-│ └─────────────────────────────────────────────┘ │
-│ [ Copy ] [ New ] [ Edit ] [ Delete ]            │  ← Copy = HighImportance,
-│ Copied “Greeting”.                              │    Delete = DangerImportance
-└─────────────────────────────────────────────────┘  ← status label
+│▌Greeting                           (bold)       │  ← widget.List. Row = 3 px blood-red
+│▌Hello,                             (dim)        │    bar (selected only), title, and a
+│ Sign-off                                        │    one-line excerpt; both truncated
+│ Best regards,                                   │    with ellipsis
+│──────────────── VSplit (0.55) ──────────────────│
+│ PREVIEW                            (microlabel) │
+│ Greeting                           (bold)       │  ← preview title
+│ Hello,                                          │  ← preview body: Label, Selectable,
+│ Thanks for reaching out.                        │    TextWrapWord, inside VScroll
+│─────────────────────────────────────────────────│
+│ [Copy] New  Edit  Delete                        │  ← Copy = HighImportance (ember);
+│ Copied “Greeting”.                              │    the rest LowImportance (flat)
+│ Enter copy  Ctrl+N new  Ctrl+E edit  Ctrl+Shift+D delete │ ← key strip
+└─────────────────────────────────────────────────┘
 ```
 
 - Row excerpt: `snippets.Excerpt(body, 80)`.
-- **Copy**, **Edit**, and **Delete** are disabled when nothing is selected. **New** is always enabled.
+- Header count: `<N> IN LIBRARY` with no query, `<M> OF <N>` while a query is active.
+- **Copy**, **Edit**, and **Delete** are disabled when nothing is selected. **New** is always enabled. Delete is a flat button; red appears only on the confirmation (see Visual design).
 - Empty states replace the list content, with a centered label in the list area:
   - Library empty: `No snippets yet. Press Ctrl+N to create one.`
   - No matches: `No snippets match “<query>”.`
 - The preview with no selection shows `Select a snippet to preview it.`
 - The status line keeps its message until the next action replaces it. No timers.
+
+## Visual design (Slayer finish)
+
+The look is the **Slayer** finish from the Screech tool: blood red on black iron, with ember as the hot end. It is a Fyne theme (`internal/ui/theme.go`) plus a few chrome helpers (`chrome.go`). It is always dark, whatever the OS setting.
+
+| Role | Value | Used for |
+|---|---|---|
+| Canvas | `#0A0A0A` | window background |
+| Panel | `#100908` | inputs, menus |
+| Surface | `#211211` | header and key strips, buttons, dialogs |
+| Selection / hover | `#351A19` / `#2A1614` | selected row, hovered row |
+| Metal edge | `#510A09` | input borders, rules between regions |
+| Text bright / mid / dim | `#F5EAEA` / `#C0AEAC` / `#A38A89` | body, secondary, excerpts and microlabels |
+| Blood red | `#C21A16` | structure only: selection bar, danger |
+| Red text | `#E8433C` | key chips, error text, the Delete confirm button |
+| Ember | `#FF6A18` | action and focus: Copy button, focus rings, links |
+
+Rules:
+
+- **Blood red never colors small text.** It is 3.3:1 on the canvas. Red that must be read uses red text; actions use ember. `TestThemeContrastFloors` keeps every text color at 4.5:1 or better on the surfaces it can land on.
+- **One primary per view.** Ember fills at most one button (Copy). Other buttons are flat.
+- **Type:** Consolas (regular, bold, italic, bold italic) read from `%SystemRoot%\Fonts` at startup; Fyne's own fonts if any file is missing. 14 px text, 12 px captions, no other sizes. Microlabels (`SNIPER`, `PREVIEW`, the count) are uppercase captions; everything else is sentence case.
+- **Shape:** 2 px radii, 1 px edges, no gradients, glow, or shadows. Dialogs use the surface color so they stand off the window.
+- **Density:** list rows use a tighter theme (padding 2) so about five fit in the list.
+- **Key strip:** the shortcuts are shown at the point of use, in red; their actions are dim.
 
 ### Selection rules
 

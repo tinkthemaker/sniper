@@ -96,6 +96,11 @@ Hands-on run (dev machine, `dist\Sniper.exe`, driven through computer use): chec
 - **Recovery:** after `xx` is appended to the library, the recovery window appears; Restore makes the primary byte-identical to the backup.
 Still pending: the browser paste (no automated route from this environment: the built-in browser's Ctrl+V is simulated, computer use cannot type into browsers, and Claude in Chrome was not connected) and the clean-machine run (Windows Sandbox not installed).
 
+**D21 — 2026-10-03 — Slayer finish and a denser main window**
+Decision: the UI adopts the Slayer finish from the Screech tool (blood red on black iron, ember as the action color; palette, rules, and contrast floors in the UI spec's Visual design section). It ships as a Fyne theme (`theme.go`), always dark. Text is Consolas loaded from `%SystemRoot%\Fonts`, with Fyne's fonts as the fallback; nothing is bundled. The main window gains a header strip with a count, a preview microlabel, dense two-line rows with a selection bar, and a key strip showing the shortcuts. Copy is the only filled button; New, Edit, and Delete are flat, so red appears only on the delete confirmation and on errors.
+Why: research on launcher and Windows apps (dense rows, one accent used sparingly, shortcuts shown where they apply) plus a house style the user already uses. Blood red is 3.3:1 on the canvas, so it is structure only; small red text uses a lifted red, and ember carries actions.
+Revisit if: Consolas or the fallback fonts mis-render a script in the real app (headless screenshots with the corpus look correct), or a light theme is wanted.
+
 ---
 
 ## Measurements

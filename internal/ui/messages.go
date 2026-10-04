@@ -77,6 +77,10 @@ Editor
 	restoredStatus      = "Restored from backup."
 	startedEmptyStatus  = "Started with an empty library."
 
+	brandName    = "SNIPER"
+	brandSub     = "SNIPPETS"
+	previewLabel = "PREVIEW"
+
 	emptyLibraryText   = "No snippets yet. Press Ctrl+N to create one."
 	previewEmptyText   = "Select a snippet to preview it."
 	alreadyRunningText = "Sniper is already running. Switch to it from the taskbar."
@@ -85,6 +89,9 @@ Editor
 // unpunctuated returns err's text without a trailing period, so templates that
 // follow it with ". …" do not produce "..".
 func unpunctuated(err error) string { return strings.TrimSuffix(err.Error(), ".") }
+
+func countAllText(n int) string          { return fmt.Sprintf("%d IN LIBRARY", n) }
+func countMatchText(n, total int) string { return fmt.Sprintf("%d OF %d", n, total) }
 
 func noMatchesText(query string) string { return fmt.Sprintf("No snippets match “%s”.", query) }
 func copiedStatus(title string) string  { return fmt.Sprintf("Copied “%s”.", title) }

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"image/color"
 	"testing"
 
 	"fyne.io/fyne/v2"
@@ -188,5 +189,39 @@ func TestShowAlreadyRunningAndFatal(t *testing.T) {
 	ShowFatal(a, "Title", "detail text")
 	if n := len(a.Driver().AllWindows()) - before; n != 2 {
 		t.Errorf("opened %d windows, want 2", n)
+	}
+}
+
+func TestHeaderCountFollowsTheQuery(t *testing.T) {
+	h := newHarness(t, sampleLibrary())
+	if h.m.countSeg.Text != "4 IN LIBRARY" {
+		t.Errorf("count = %q", h.m.countSeg.Text)
+	}
+	h.typeText("greet")
+	if h.m.countSeg.Text != "2 OF 4" {
+		t.Errorf("count after query = %q", h.m.countSeg.Text)
+	}
+	h.key(fyne.KeyEscape)
+	if h.m.countSeg.Text != "4 IN LIBRARY" {
+		t.Errorf("count after clearing = %q", h.m.countSeg.Text)
+	}
+}
+
+func TestRowShowsSelectionBar(t *testing.T) {
+	h := newHarness(t, sampleLibrary()) // first result (Address) is selected
+	barFor := func(i int) color.Color {
+		row := h.m.newRow()
+		h.m.updateRow(i, row)
+		return h.m.rows[row].bar.FillColor
+	}
+	if got := barFor(0); got != bloodRed {
+		t.Errorf("selected row bar = %v, want blood red", got)
+	}
+	if got := barFor(1); got != color.Color(color.Transparent) {
+		t.Errorf("unselected row bar = %v, want transparent", got)
+	}
+	h.key(fyne.KeyDown)
+	if got := barFor(1); got != bloodRed {
+		t.Errorf("bar did not follow the selection: %v", got)
 	}
 }

@@ -1,10 +1,12 @@
 package ui
 
 import (
+	"image/color"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/tinkthemaker/sniper/internal/clipboard"
@@ -44,6 +46,9 @@ type MainWindow struct {
 	editor  *editor        // the open editor, if any
 	dialogs []*shownDialog // dialogs open over the window, oldest first
 
+	rows         map[fyne.CanvasObject]*rowRefs
+	countSeg     *widget.TextSegment
+	count        *widget.RichText
 	search       *searchEntry
 	list         *resultList
 	emptyLabel   *widget.Label
@@ -58,7 +63,7 @@ type MainWindow struct {
 
 // ShowMain creates and shows the main window for lib.
 func ShowMain(d Deps, lib snippets.Library) *MainWindow {
-	m := &MainWindow{deps: d, lib: lib}
+	m := &MainWindow{deps: d, lib: lib, rows: map[fyne.CanvasObject]*rowRefs{}}
 	m.win = d.App.NewWindow(appTitle)
 	m.win.SetMaster() // closing the main window quits the app
 	m.build()
@@ -97,21 +102,29 @@ func (m *MainWindow) build() {
 
 	m.copyBtn = widget.NewButton(labelCopy, m.copySelected)
 	m.copyBtn.Importance = widget.HighImportance
+	m.countSeg = microText("", theme.ColorNamePlaceHolder, false)
+	m.countSeg.Style.Alignment = fyne.TextAlignTrailing
+	m.count = widget.NewRichText(m.countSeg)
 	m.newBtn = widget.NewButton(labelNew, m.newSnippet)
 	m.editBtn = widget.NewButton(labelEdit, m.editSelected)
 	m.deleteBtn = widget.NewButton(labelDelete, m.deleteSelected)
-	m.deleteBtn.Importance = widget.DangerImportance
+	m.newBtn.Importance, m.editBtn.Importance, m.deleteBtn.Importance = widget.LowImportance, widget.LowImportance, widget.LowImportance
 	m.status = widget.NewLabel("")
 	m.status.Truncation = fyne.TextTruncateEllipsis
 }
 
 func (m *MainWindow) layout() fyne.CanvasObject {
 	listArea := container.NewStack(m.list, container.NewCenter(m.emptyLabel))
-	preview := container.NewBorder(m.previewTitle, nil, nil, nil, container.NewVScroll(m.previewBody))
+	previewHead := container.NewVBox(widget.NewRichText(microText(previewLabel, theme.ColorNamePlaceHolder, true)), m.previewTitle)
+	preview := container.NewBorder(previewHead, nil, nil, nil, container.NewVScroll(m.previewBody))
 	split := container.NewVSplit(listArea, preview)
-	split.Offset = 0.45
+	split.Offset = 0.55
+	brand := widget.NewRichText(microText(brandName, theme.ColorNameError, true), microText("  "+brandSub, theme.ColorNamePlaceHolder, false))
+	header := strip(container.NewStack(brand, m.count))
 	buttons := container.NewHBox(m.copyBtn, m.newBtn, m.editBtn, m.deleteBtn)
-	return container.NewBorder(m.search, container.NewVBox(buttons, m.status), nil, nil, split)
+	top := container.NewVBox(header, edgeRule(), container.NewPadded(m.search))
+	bottom := container.NewVBox(edgeRule(), buttons, m.status, strip(keyHints()))
+	return container.NewBorder(top, bottom, nil, nil, split)
 }
 
 // refresh recomputes the results for the current query and selects preferID if
@@ -128,6 +141,15 @@ func (m *MainWindow) refresh(preferID string) {
 	m.syncView()
 }
 
+func (m *MainWindow) updateCount() {
+	if m.query == "" {
+		m.countSeg.Text = countAllText(len(m.lib.Snippets))
+	} else {
+		m.countSeg.Text = countMatchText(len(m.results), len(m.lib.Snippets))
+	}
+	m.count.Refresh()
+}
+
 // syncView pushes the selection to the list, preview, buttons and empty state.
 func (m *MainWindow) syncView() {
 	m.syncing = true
@@ -139,6 +161,8 @@ func (m *MainWindow) syncView() {
 		m.list.UnselectAll()
 	}
 	m.syncing = false
+	m.list.Refresh() // the selection bar is drawn by the rows themselves
+	m.updateCount()
 
 	sel, has := m.selected()
 	if has {
@@ -175,9 +199,19 @@ func (m *MainWindow) updateRow(i widget.ListItemID, o fyne.CanvasObject) {
 	if i >= len(m.results) {
 		return
 	}
-	row := o.(*fyne.Container)
-	row.Objects[0].(*widget.Label).SetText(m.results[i].Title)
-	row.Objects[1].(*widget.Label).SetText(snippets.Excerpt(m.results[i].Body, 80))
+	refs := m.rows[o]
+	if refs == nil {
+		return
+	}
+	s := m.results[i]
+	refs.title.SetText(s.Title)
+	refs.excerpt.Text = snippets.Excerpt(s.Body, 80)
+	refs.rich.Refresh()
+	refs.bar.FillColor = color.Color(color.Transparent)
+	if s.ID == m.selectedID {
+		refs.bar.FillColor = bloodRed
+	}
+	refs.bar.Refresh()
 }
 
 func (m *MainWindow) onListSelected(i widget.ListItemID) {

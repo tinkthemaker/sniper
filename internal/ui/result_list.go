@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -16,7 +15,7 @@ type resultList struct {
 func newResultList(m *MainWindow) *resultList {
 	l := &resultList{m: m}
 	l.Length = func() int { return len(m.results) }
-	l.CreateItem = newRow
+	l.CreateItem = m.newRow
 	l.UpdateItem = m.updateRow
 	l.OnSelected = m.onListSelected
 	l.ExtendBaseWidget(l)
@@ -28,13 +27,4 @@ func (l *resultList) TypedKey(k *fyne.KeyEvent) {
 		return
 	}
 	l.List.TypedKey(k)
-}
-
-func newRow() fyne.CanvasObject {
-	title := widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
-	title.Truncation = fyne.TextTruncateEllipsis
-	excerpt := widget.NewLabel("")
-	excerpt.Importance = widget.LowImportance
-	excerpt.Truncation = fyne.TextTruncateEllipsis
-	return container.NewVBox(title, excerpt)
 }

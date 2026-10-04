@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2"
 
 	"github.com/tinkthemaker/sniper/internal/snippets"
+	"github.com/tinkthemaker/sniper/internal/store"
 )
 
 // TestScreens renders key states to PNGs for human review. It only runs when
@@ -90,5 +91,31 @@ func TestScreens(t *testing.T) {
 		h.m.win.Resize(fyne.NewSize(520, 600))
 		h.m.importFrom(strings.NewReader(importJSON), "sample-import.json")
 		shot("09-import-confirm", h.m.win)
+	})
+	t.Run("corpus", func(t *testing.T) {
+		f, err := os.Open(filepath.Join("..", "..", "testdata", "sample-import.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer f.Close()
+		items, err := store.DecodeImport(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		lib, err := snippets.Append(snippets.NewLibrary(), items)
+		if err != nil {
+			t.Fatal(err)
+		}
+		h := newHarness(t, lib)
+		h.m.win.Resize(fyne.NewSize(520, 600))
+		for i := 0; i < 4; i++ { // select the emoji snippet
+			h.key(fyne.KeyDown)
+		}
+		shot("10-corpus-emoji", h.m.win)
+		h.key(fyne.KeyDown)
+		h.key(fyne.KeyDown)
+		shot("11-corpus-cjk", h.m.win)
+		h.key(fyne.KeyDown)
+		shot("12-corpus-rtl", h.m.win)
 	})
 }

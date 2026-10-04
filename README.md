@@ -61,10 +61,10 @@ Then, from this folder:
 
 ```bash
 go run ./cmd/sniper                               # run
-pwsh -NoProfile -File scripts/check.ps1           # gofmt, vet, staticcheck, all tests
-pwsh -NoProfile -File scripts/check.ps1 -Quick    # gofmt, vet, tests only
+pwsh -NoProfile -File scripts/check.ps1           # gofmt, vet, staticcheck, all tests, then a fresh dist\Sniper.exe
+pwsh -NoProfile -File scripts/check.ps1 -Quick    # gofmt, vet, tests, then a fresh exe
 go run ./cmd/clipcheck                            # real-clipboard check (needs a desktop session)
-pwsh -NoProfile -File scripts/package.ps1         # builds dist\Sniper.exe
+pwsh -NoProfile -File scripts/package.ps1         # builds dist\Sniper.exe only if a source file is newer (-Force to always)
 ```
 
 Or install it straight from GitHub (still needs gcc): `go install github.com/tinkthemaker/sniper/cmd/sniper@latest`.

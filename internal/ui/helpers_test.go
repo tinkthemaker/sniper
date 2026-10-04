@@ -67,6 +67,7 @@ func newHarness(t *testing.T, lib snippets.Library) *harness {
 func newHarnessWrapping(t *testing.T, lib snippets.Library, wrap func(*store.Store) Storage) *harness {
 	t.Helper()
 	h := &harness{t: t, app: test.NewTempApp(t), store: store.New(t.TempDir()), cb: &fakeClipboard{}}
+	h.app.Settings().SetTheme(NewTheme())
 	if len(lib.Snippets) > 0 {
 		if err := h.store.Save(lib); err != nil {
 			t.Fatal(err)

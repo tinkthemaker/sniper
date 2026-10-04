@@ -112,11 +112,17 @@ Required behaviors:
 12. Recovery: with a damaged primary and a valid backup, Restore opens the main window with the backup content. Move aside, then confirm, creates the damaged file and opens an empty main window.
 13. Empty-state labels appear for an empty library and for no matches. Copy, Edit, and Delete are disabled with no selection.
 14. Ctrl+N while the editor is open does nothing (modal guard).
+
+Theme and chrome (added with the Slayer finish; see the UI spec's Visual design section):
+
+15. `TestThemeContrastFloors`: every text color is at least 4.5:1 on each surface it can land on, and on both filled buttons.
+16. `TestThemeIsAlwaysDark` and `TestThemeFontFallback`: the theme ignores the OS variant, and falls back to Fyne's fonts when Consolas is missing.
+17. `TestHeaderCountFollowsTheQuery` and `TestRowShowsSelectionBar`: the header count and the selection bar follow the query and the selection.
 15. Editor Tab order is Title → Body → Cancel → Save, and Shift+Tab reverses it. Walk `Canvas().FocusNext()` and `FocusPrevious()`, which is what the real driver calls for Tab. Focusing fields directly would hide an order bug (D20).
 
 ### Visual review (screenshots without a display)
 
-`TestScreens` renders key states with the software test driver and writes PNGs to `internal/ui/testdata/screens/` (git-ignored), but only when `SNIPER_SCREENS=1` is set. The states are: empty library, populated list with a selection, no matches, the editor with a validation error, the delete confirmation, and the recovery window. Use `w.Resize(fyne.NewSize(520, 600))`, then `img := w.Canvas().Capture()`, then `png.Encode`.
+`TestScreens` renders key states with the software test driver and writes PNGs to `internal/ui/testdata/screens/` (git-ignored), but only when `SNIPER_SCREENS=1` is set. The states are: empty library, populated list with a selection, no matches, the editor with a validation error, the delete confirmation, the recovery window (with and without a backup), About, the import confirmation, and three screens from the Unicode corpus (emoji, CJK, right-to-left) to check font fallback under Consolas. Use `w.Resize(fyne.NewSize(520, 600))`, then `img := w.Canvas().Capture()`, then `png.Encode`.
 
 After M4, M5, and M6, the agent runs `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens` and **opens the PNGs** (an image-capable Read tool works) to check the layout against the UI spec: nothing clipped, empty states centered, buttons enabled or disabled correctly. Fix anything wrong before the exit check. These screenshots are for review, not golden-image assertions, because font rendering differs between machines.
 

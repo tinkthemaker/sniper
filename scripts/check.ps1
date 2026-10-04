@@ -26,4 +26,6 @@ if (-not $Quick) {
     Step 'race (snippets, store)' { go test -race ./internal/snippets/... ./internal/store/... }
 }
 Step 'go test ./...' { go test ./... }
+# Always leave a fresh exe behind (a no-op when nothing changed).
+Step 'package' { pwsh -NoProfile -File (Join-Path $PSScriptRoot 'package.ps1') }
 Write-Host 'ALL CHECKS PASSED' -ForegroundColor Green
