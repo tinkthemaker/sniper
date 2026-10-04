@@ -101,6 +101,16 @@ Decision: the UI adopts the Slayer finish from the Screech tool (blood red on bl
 Why: research on launcher and Windows apps (dense rows, one accent used sparingly, shortcuts shown where they apply) plus a house style the user already uses. Blood red is 3.3:1 on the canvas, so it is structure only; small red text uses a lifted red, and ember carries actions.
 Revisit if: Consolas or the fallback fonts mis-render a script in the real app (headless screenshots with the corpus look correct), or a light theme is wanted.
 
+**D22 — 2026-10-03 — Layout grid: one box line, one text line**
+Decision: every window and the editor dialog sit on a 4 px grid with a 12 px box line (boxed controls) and a 16 px text line (all text). The theme's inner padding is 4, so any widget on the box line has its text on the text line. Strips, rules and the divider run edge to edge (window padding off), and strips are 32 px. Regions are 12 px apart, buttons and header-to-content 8 px. The status moved onto the button row, right-aligned. Secondary buttons use a raised fill (`#2E1816`) instead of being flat, and hover is a translucent veil. The editor puts labels above fields and draws its own heading so it lines up. The recovery window moved "Your data has not been changed" under the error. The split divider is recolored to match the rules, and the list keeps 8 px clear of it.
+Why: measured from headless renders, the old layout had text starting at seven different x positions (8–22 px) and boxes at 4, 8 and 12. Sources (human-written):
+- [Microsoft: content layout and spacing](https://learn.microsoft.com/en-us/windows/apps/design/basics/content-basics): 16 px from a surface edge to its text, 12 between content areas, 8 between buttons and between a header and its control.
+- [Microsoft: typography in Windows](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/typography): flush-left alignment, 14/20 and 12/16 type, ellipsis truncation.
+- [NN/g: proximity](https://www.nngroup.com/articles/gestalt-proximity/): related items closer than unrelated ones; equal spacing everywhere destroys grouping. That is why the status moved beside the buttons and the reassurance under the error.
+- [NN/g: principles of visual design](https://www.nngroup.com/articles/principles-visual-design/): few sizes, and contrast to signal function.
+Flat secondary buttons also blended into dialogs, which are drawn in the button's old color.
+Left as is: the menu bar is window chrome drawn by Fyne from the global inner padding, so its text sits 8 px in. Fyne's standard dialogs keep their own layout. Microsoft recommends sentence case and a proportional UI font; the uppercase microlabels and Consolas are kept as part of the D21 house style (Consolas caps are monospaced, so they don't need the extra letterspacing that all-caps text otherwise needs, per [Butterick](https://practicaltypography.com/letterspacing.html)).
+
 ---
 
 ## Measurements

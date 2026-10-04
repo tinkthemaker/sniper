@@ -8,33 +8,32 @@ Title `Sniper`. Initial size 520×600. Resizable. Closing the window quits the a
 
 ```text
 ┌ File  Help ─────────────────────────────────────┐
-│ SNIPER  SNIPPETS                    12 IN LIBRARY│  ← header strip (iron surface)
-│─────────────────────────────────────────────────│  ← metal edge (1 px)
-│ [ Search snippets (Ctrl+F)                    ] │  ← searchEntry (focused at start)
-│▌Greeting                           (bold)       │  ← widget.List. Row = 3 px blood-red
-│▌Hello,                             (dim)        │    bar (selected only), title, and a
-│ Sign-off                                        │    one-line excerpt; both truncated
-│ Best regards,                                   │    with ellipsis
-│──────────────── VSplit (0.55) ──────────────────│
-│ PREVIEW                            (microlabel) │
-│ Greeting                           (bold)       │  ← preview title
-│ Hello,                                          │  ← preview body: Label, Selectable,
-│ Thanks for reaching out.                        │    TextWrapWord, inside VScroll
+│ SNIPER  SNIPPETS                    12 IN LIBRARY│  ← header strip, 32 px, full width
+│─────────────────────────────────────────────────│  ← metal edge (1 px), full width
+│  [ Search snippets (Ctrl+F)                  ]  │  ← searchEntry, 12 px above and below
+│ ▌Greeting                          (bold)       │  ← widget.List. Row = title and a one-line
+│ ▌Hello,                            (dim)        │    excerpt (ellipsis); 3 px blood-red bar
+│  Sign-off                                       │    overlaid on the row edge when selected
+│  Best regards,                                  │    8 px clear above the divider
+│──────────────── VSplit (0.55) ──────────────────│  ← divider in metal edge, dim grip
+│  PREVIEW                           (microlabel) │
+│  Greeting                          (bold)       │  ← preview title
+│  Hello,                                         │  ← preview body: Label, Selectable,
+│  Thanks for reaching out.                       │    TextWrapWord, inside VScroll
 │─────────────────────────────────────────────────│
-│ [Copy] New  Edit  Delete                        │  ← Copy = HighImportance (ember);
-│ Copied “Greeting”.                              │    the rest LowImportance (flat)
-│ Enter copy  Ctrl+N new  Ctrl+E edit  Ctrl+Shift+D delete │ ← key strip
+│  [Copy] [New] [Edit] [Delete]  Copied “Greeting”.│ ← buttons 8 px apart; status right-aligned
+│ Enter copy  Ctrl+N new  Ctrl+E edit  Ctrl+Shift+D delete │ ← key strip, 32 px
 └─────────────────────────────────────────────────┘
 ```
 
 - Row excerpt: `snippets.Excerpt(body, 80)`.
 - Header count: `<N> IN LIBRARY` with no query, `<M> OF <N>` while a query is active.
-- **Copy**, **Edit**, and **Delete** are disabled when nothing is selected. **New** is always enabled. Delete is a flat button; red appears only on the confirmation (see Visual design).
+- **Copy**, **Edit**, and **Delete** are disabled when nothing is selected. **New** is always enabled. Delete is an ordinary secondary button; red appears only on the confirmation (see Visual design).
 - Empty states replace the list content, with a centered label in the list area:
   - Library empty: `No snippets yet. Press Ctrl+N to create one.`
   - No matches: `No snippets match “<query>”.`
 - The preview with no selection shows `Select a snippet to preview it.`
-- The status line keeps its message until the next action replaces it. No timers.
+- The status sits on the button row, right-aligned, because it reports on those actions. It keeps its message until the next action replaces it. No timers.
 
 ## Visual design (Slayer finish)
 
@@ -44,8 +43,10 @@ The look is the **Slayer** finish from the Screech tool: blood red on black iron
 |---|---|---|
 | Canvas | `#0A0A0A` | window background |
 | Panel | `#100908` | inputs, menus |
-| Surface | `#211211` | header and key strips, buttons, dialogs |
-| Selection / hover | `#351A19` / `#2A1614` | selected row, hovered row |
+| Surface | `#211211` | header and key strips, dialogs |
+| Raised | `#2E1816` | secondary buttons (one step above the surface) |
+| Selection | `#351A19` | selected row |
+| Hover | `#F5EAEA` at 6% | translucent veil over hovered rows and buttons |
 | Metal edge | `#510A09` | input borders, rules between regions |
 | Text bright / mid / dim | `#F5EAEA` / `#C0AEAC` / `#A38A89` | body, secondary, excerpts and microlabels |
 | Blood red | `#C21A16` | structure only: selection bar, danger |
@@ -55,10 +56,18 @@ The look is the **Slayer** finish from the Screech tool: blood red on black iron
 Rules:
 
 - **Blood red never colors small text.** It is 3.3:1 on the canvas. Red that must be read uses red text; actions use ember. `TestThemeContrastFloors` keeps every text color at 4.5:1 or better on the surfaces it can land on.
-- **One primary per view.** Ember fills at most one button (Copy). Other buttons are flat.
+- **One primary per view.** Ember fills at most one button (Copy). Other buttons use the quiet raised fill `#2E1816`, one step above the surface, so they still read as buttons, including on dialogs, whose background is the surface color. Hover is a translucent light veil (`#F5EAEA` at 6%) blended over whatever it covers.
 - **Type:** Consolas (regular, bold, italic, bold italic) read from `%SystemRoot%\Fonts` at startup; Fyne's own fonts if any file is missing. 14 px text, 12 px captions, no other sizes. Microlabels (`SNIPER`, `PREVIEW`, the count) are uppercase captions; everything else is sentence case.
 - **Shape:** 2 px radii, 1 px edges, no gradients, glow, or shadows. Dialogs use the surface color so they stand off the window.
-- **Density:** list rows use a tighter theme (padding 2) so about five fit in the list.
+- **Density:** list rows drop the gaps between and around them (padding 0) but keep the 4 px inner padding, so row text stays on the text line.
+- **Grid.** Every margin is on a 4 px grid, and two vertical lines run down every window and dialog (constants in `chrome.go`):
+  - **Box line, 12 px in from each side:** search box, list (and its selection), buttons, editor fields.
+  - **Text line, 16 px in:** all text. Widgets inset their text by the theme's 4 px inner padding, so a widget on the box line has its text on the text line. Windows asks for 16 px between a surface edge and its text.
+  - **Edge to edge:** strips, rules and the split divider. The main and recovery windows turn off Fyne's window padding so these reach the edges.
+- **Spacing:** 12 px between regions (header → search → list; rule → buttons → strip); 8 px between buttons and between a header and its content; 4 px between a field label and its field (8 px with the label's inner padding). Related things sit closer than unrelated ones.
+- **Strips:** header and key strips are exactly 32 px high, with their caption text centered vertically.
+- **Dialogs:** custom dialog content (the editor) is placed on the same grid measured from the dialog's edges. `onDialogGrid` cancels Fyne's fixed dialog padding, and the dialog's own heading is left empty and drawn inside the content, because Fyne pins that heading to the dialog edge. Fyne's standard dialogs (confirmations, About, errors) keep Fyne's layout.
+- **Not ours to align:** the menu bar (`File  Help`) is window chrome drawn by Fyne with its own padding, so its text sits 8 px in rather than on the text line.
 - **Key strip:** the shortcuts are shown at the point of use, in red; their actions are dim.
 
 ### Selection rules
@@ -117,12 +126,17 @@ Headless tests must prove that Ctrl+N works while search has focus, that Ctrl+S 
 A modal custom dialog without built-in buttons (`dialog.NewCustomWithoutButtons`), titled `New snippet` or `Edit snippet`. Size: the window size minus a 40 px margin, and at least 420×380.
 
 ```text
-Title  [ single-line editorEntry                 ]
-Body   [ multiline editorEntry, TextWrapWord,     ]
-       [ fills remaining height                   ]
+New snippet                                  (bold heading, drawn in the content)
+Title
+[ single-line editorEntry                         ]
+Body
+[ multiline editorEntry, TextWrapWord,            ]
+[ fills remaining height                          ]
 <error label, DangerImportance, hidden when empty>
-                                [ Cancel ] [ Save ]
+                                    [ Cancel ] [ Save ]
 ```
+
+Labels sit above their fields, as in Windows text boxes, so both fields share one left edge and the full width. Everything is on the grid from the dialog's edges (see Visual design → Dialogs). Cancel is a secondary button and Save is the primary; they are right-aligned, 8 px apart.
 
 - Focus starts on Title for New and on Body for Edit.
 - **Save** (or Ctrl+S): normalize, then validate. A validation error is shown in the error label, and focus moves to the offending field. Then mutate and call `Store.Save`. If the save fails, show `Could not save: <err>. Your changes are still here; try again.` and keep the dialog open. On success, close the dialog, set the status to `Saved “<title>”.`, and refocus search.
@@ -150,16 +164,17 @@ Resize file dialogs to the window size minus a 40 px margin (Fyne's default is c
 Title `Sniper – Recover library`. Size 520×320.
 
 ```text
-Sniper could not open your snippet library.
-
+Sniper could not open your snippet library.     (bold)
 <path to snippets.json>
 <Err text>
+Your data has not been changed.                 ← directly under the error it qualifies
 
-Your data has not been changed.
-
-[ Restore backup ]  [ Move damaged file aside and start empty ]
-[ Open data folder ]  [ Quit ]
+[ Restore backup                              ]  ← primary (ember)
+[ Move damaged file aside and start empty     ]
+[ Open data folder     ]  [ Quit              ]  ← equal halves, 8 px apart
 ```
+
+On the same grid as the main window: buttons on the 12 px box line, 8 px apart; text on the 16 px text line.
 
 - **Restore backup** is disabled with the tooltip-like caption `No valid backup found.` when `BackupAvailable` is false. On success, the main window opens with the status `Restored from backup.`, and this window closes.
 - **Move aside…** first confirms `Move snippets.json to <new name> and start with an empty library?` On success, the main window opens with the status `Moved damaged file to <name>.`

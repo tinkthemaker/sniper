@@ -85,14 +85,26 @@ func (m *MainWindow) openEditor(existing *snippets.Snippet) {
 	ed.cancelBtn = widget.NewButton(labelCancel, ed.cancel)
 	save := widget.NewButton(labelSave, ed.save)
 	save.Importance = widget.HighImportance
-	top := container.NewBorder(nil, nil, widget.NewLabel(labelTitle), nil, ed.title)
-	bodyRow := container.NewBorder(nil, nil, container.NewVBox(widget.NewLabel(labelBody)), nil, ed.body)
-	bottom := container.NewVBox(ed.errLabel, container.NewHBox(layout.NewSpacer(), ed.cancelBtn, save))
+
+	// Field labels sit above their fields (the Windows text box pattern), so
+	// both fields share one left edge and the full width. A label's inner
+	// padding plus a 4 px gap puts its text 8 px from the field.
+	stack := func(objs ...fyne.CanvasObject) *fyne.Container {
+		return container.New(layout.NewCustomPaddedVBoxLayout(4), objs...)
+	}
+	top := stack(widget.NewLabelWithStyle(heading, fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		stack(widget.NewLabel(labelTitle), ed.title))
+	bodyLabel := widget.NewLabel(labelBody)
+	body := inset(container.New(layout.NewBorderLayout(bodyLabel, nil, nil, nil), bodyLabel, ed.body), gapItem, 0, 0, 0)
+	buttons := container.New(layout.NewCustomPaddedHBoxLayout(gapItem), layout.NewSpacer(), ed.cancelBtn, save)
+	bottom := inset(stack(ed.errLabel, buttons), gapItem, 0, 0, 0)
 	// Tab order follows child order, and NewBorder puts the center first, so
 	// list the children in visual order: title, body, then the buttons.
-	content := container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, bodyRow, bottom)
+	content := container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, body, bottom)
 
-	ed.dlg = dialog.NewCustomWithoutButtons(heading, content, m.win)
+	// The heading is drawn above as part of the content, so that it lines up
+	// with everything else; the dialog's own heading is left empty.
+	ed.dlg = dialog.NewCustomWithoutButtons("", onDialogGrid(content), m.win)
 	size := m.win.Canvas().Size()
 	ed.dlg.Resize(fyne.NewSize(max(size.Width-40, 420), max(size.Height-40, 380)))
 	m.editor = ed

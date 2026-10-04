@@ -6,6 +6,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
@@ -65,7 +66,8 @@ type MainWindow struct {
 func ShowMain(d Deps, lib snippets.Library) *MainWindow {
 	m := &MainWindow{deps: d, lib: lib, rows: map[fyne.CanvasObject]*rowRefs{}}
 	m.win = d.App.NewWindow(appTitle)
-	m.win.SetMaster() // closing the main window quits the app
+	m.win.SetMaster()      // closing the main window quits the app
+	m.win.SetPadded(false) // the layout sets every margin itself (chrome.go)
 	m.build()
 	m.win.SetContent(m.layout())
 	m.win.Resize(fyne.NewSize(520, 600))
@@ -108,23 +110,40 @@ func (m *MainWindow) build() {
 	m.newBtn = widget.NewButton(labelNew, m.newSnippet)
 	m.editBtn = widget.NewButton(labelEdit, m.editSelected)
 	m.deleteBtn = widget.NewButton(labelDelete, m.deleteSelected)
-	m.newBtn.Importance, m.editBtn.Importance, m.deleteBtn.Importance = widget.LowImportance, widget.LowImportance, widget.LowImportance
+	// Secondary buttons keep a quiet surface fill rather than going flat: they
+	// still read as buttons, and four visible boxes 8 px apart space evenly.
+	// Copy stays the only ember (primary) button.
+	m.newBtn.Importance, m.editBtn.Importance, m.deleteBtn.Importance = widget.MediumImportance, widget.MediumImportance, widget.MediumImportance
 	m.status = widget.NewLabel("")
+	m.status.Alignment = fyne.TextAlignTrailing
 	m.status.Truncation = fyne.TextTruncateEllipsis
 }
 
+// layout places every region on the grid in chrome.go: strips and rules run
+// full width, everything else sits on the box line, and so all text starts on
+// the text line. Regions are 12 px apart; a header is 8 px from its content.
 func (m *MainWindow) layout() fyne.CanvasObject {
-	listArea := container.NewStack(m.list, container.NewCenter(m.emptyLabel))
-	previewHead := container.NewVBox(widget.NewRichText(microText(previewLabel, theme.ColorNamePlaceHolder, true)), m.previewTitle)
-	preview := container.NewBorder(previewHead, nil, nil, nil, container.NewVScroll(m.previewBody))
-	split := container.NewVSplit(listArea, preview)
-	split.Offset = 0.55
 	brand := widget.NewRichText(microText(brandName, theme.ColorNameError, true), microText("  "+brandSub, theme.ColorNamePlaceHolder, false))
 	header := strip(container.NewStack(brand, m.count))
-	buttons := container.NewHBox(m.copyBtn, m.newBtn, m.editBtn, m.deleteBtn)
-	top := container.NewVBox(header, edgeRule(), container.NewPadded(m.search))
-	bottom := container.NewVBox(edgeRule(), buttons, m.status, strip(keyHints()))
-	return container.NewBorder(top, bottom, nil, nil, split)
+	search := inset(m.search, gapArea, boxLine, gapArea, boxLine)
+	top := container.New(layout.NewCustomPaddedVBoxLayout(0), header, edgeRule(), search)
+
+	// The bottom margin keeps a row scrolled to the end clear of the divider and its grip.
+	listArea := inset(container.NewStack(m.list, container.NewCenter(m.emptyLabel)), 0, boxLine, gapItem, boxLine)
+	previewHead := container.New(layout.NewCustomPaddedVBoxLayout(0),
+		widget.NewRichText(microText(previewLabel, theme.ColorNamePlaceHolder, true)), m.previewTitle)
+	preview := inset(container.NewBorder(previewHead, nil, nil, nil, container.NewVScroll(m.previewBody)),
+		gapItem, boxLine, 0, boxLine)
+	split := container.NewVSplit(container.NewThemeOverride(listArea, NewTheme()), container.NewThemeOverride(preview, NewTheme()))
+	split.Offset = 0.55
+	divided := container.NewThemeOverride(split, dividerTheme{NewTheme()})
+
+	// The status reports on the buttons, so it shares their row (proximity),
+	// right-aligned so its text ends on the right text line.
+	buttons := container.New(layout.NewCustomPaddedHBoxLayout(gapItem), m.copyBtn, m.newBtn, m.editBtn, m.deleteBtn)
+	actions := inset(container.NewBorder(nil, nil, buttons, nil, m.status), gapArea, boxLine, gapArea, boxLine)
+	bottom := container.New(layout.NewCustomPaddedVBoxLayout(0), edgeRule(), actions, strip(keyHints()))
+	return container.NewBorder(top, bottom, nil, nil, divided)
 }
 
 // refresh recomputes the results for the current query and selects preferID if

@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/tinkthemaker/sniper/internal/snippets"
@@ -57,10 +58,19 @@ func showRecovery(d Deps, res store.LoadResult) *recoveryWindow {
 	open := widget.NewButton(labelOpenFolder, r.openFolder)
 	quit := widget.NewButton(labelQuit, d.App.Quit)
 
+	open.Importance, quit.Importance, r.moveBtn.Importance = widget.MediumImportance, widget.MediumImportance, widget.MediumImportance
+
+	// Same grid as the main window (chrome.go). "Your data has not been
+	// changed" sits right under the error it qualifies, and the actions form
+	// one group at the bottom, 8 px apart.
 	intro := widget.NewLabelWithStyle(recoveryIntro, fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
-	buttons := container.NewVBox(widget.NewLabel(recoveryUntouched), r.restoreBtn, caption, r.moveBtn, container.NewGridWithColumns(2, open, quit))
-	text := container.NewVScroll(container.NewVBox(intro, where, why))
-	r.win.SetContent(container.NewBorder(nil, buttons, nil, nil, text))
+	untouched := widget.NewLabel(recoveryUntouched)
+	text := container.NewVScroll(container.New(layout.NewCustomPaddedVBoxLayout(0), intro, where, why, untouched))
+	pair := container.New(&equalColumns{gap: gapItem}, open, quit)
+	buttons := container.New(layout.NewCustomPaddedVBoxLayout(gapItem), r.restoreBtn, caption, r.moveBtn, pair)
+	content := container.NewBorder(nil, inset(buttons, gapArea, 0, 0, 0), nil, nil, text)
+	r.win.SetPadded(false)
+	r.win.SetContent(inset(content, boxLine, boxLine, boxLine, boxLine))
 	r.win.Resize(fyne.NewSize(520, 320))
 	r.win.Show()
 	return r

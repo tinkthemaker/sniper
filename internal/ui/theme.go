@@ -17,11 +17,15 @@ import (
 var (
 	ironCanvas  = rgb(0x0A, 0x0A, 0x0A) // window background
 	ironPanel   = rgb(0x10, 0x09, 0x08) // inputs, menus, dialogs
-	ironSurface = rgb(0x21, 0x12, 0x11) // strips and buttons
+	ironSurface = rgb(0x21, 0x12, 0x11) // strips and dialogs
+	ironRaised  = rgb(0x2E, 0x18, 0x16) // buttons: one step above the surface, so they show on dialogs too
 	ironSelect  = rgb(0x35, 0x1A, 0x19) // selected row
-	ironHover   = rgb(0x2A, 0x16, 0x14)
-	ironEdge    = rgb(0x51, 0x0A, 0x09) // metal edge: borders and rules
-	ironRule    = rgb(0x3A, 0x13, 0x11) // quiet separators
+	// Hover is a translucent veil blended over whatever it covers (Fyne blends
+	// it onto buttons), so it lightens rows and buttons alike and stays weaker
+	// than the selection.
+	ironHover = color.NRGBA{R: 0xF5, G: 0xEA, B: 0xEA, A: 0x10}
+	ironEdge  = rgb(0x51, 0x0A, 0x09) // metal edge: borders and rules
+	ironRule  = rgb(0x3A, 0x13, 0x11) // quiet separators
 
 	textBright = rgb(0xF5, 0xEA, 0xEA)
 	textMid    = rgb(0xC0, 0xAE, 0xAC)
@@ -61,7 +65,9 @@ func (t *slayerTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color
 	case theme.ColorNameForegroundOnPrimary, theme.ColorNameForegroundOnError,
 		theme.ColorNameForegroundOnWarning, theme.ColorNameForegroundOnSuccess:
 		return ironCanvas
-	case theme.ColorNameButton, theme.ColorNameHeaderBackground:
+	case theme.ColorNameButton:
+		return ironRaised
+	case theme.ColorNameHeaderBackground:
 		return ironSurface
 	case theme.ColorNameDisabledButton:
 		return rgb(0x14, 0x0D, 0x0C)
@@ -102,7 +108,7 @@ func (t *slayerTheme) Size(name fyne.ThemeSizeName) float32 {
 	case theme.SizeNamePadding:
 		return 4
 	case theme.SizeNameInnerPadding:
-		return 6
+		return 4 // widget text inset; boxLine + 4 = textLine (chrome.go)
 	case theme.SizeNameInputBorder, theme.SizeNameSeparatorThickness:
 		return 1
 	case theme.SizeNameInputRadius, theme.SizeNameButtonRadius, theme.SizeNameSelectionRadius,
@@ -130,12 +136,28 @@ func (t *slayerTheme) Font(s fyne.TextStyle) fyne.Resource {
 	return t.base.Font(s)
 }
 
-// denseTheme tightens padding for list rows so about five fit in the list.
+// dividerTheme colors a split's divider like the other rules: the bar in the
+// metal edge and its grip dim, instead of shadow and bright text. Wrap only the
+// split in it, and give each pane back the base theme with its own override.
+type dividerTheme struct{ fyne.Theme }
+
+func (d dividerTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
+	switch name {
+	case theme.ColorNameShadow:
+		return ironEdge
+	case theme.ColorNameForeground:
+		return textDim
+	}
+	return d.Theme.Color(name, v)
+}
+
+// denseTheme removes the gaps between and around list rows. It leaves the inner
+// padding alone, because that is what keeps row text on the text line.
 type denseTheme struct{ fyne.Theme }
 
 func (d denseTheme) Size(name fyne.ThemeSizeName) float32 {
-	if name == theme.SizeNameInnerPadding || name == theme.SizeNamePadding {
-		return 2
+	if name == theme.SizeNamePadding {
+		return 0
 	}
 	return d.Theme.Size(name)
 }
