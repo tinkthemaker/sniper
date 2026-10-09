@@ -90,7 +90,6 @@ func Delete(lib Library, id string) (Library, error)                       // Er
 func Append(lib Library, items []Snippet) (Library, error)                 // fresh IDs, limit check
 
 func Search(items []Snippet, query string) []Snippet // new slice; rules in product spec
-func Excerpt(body string, maxRunes int) string       // first non-blank line, trimmed, "…" if cut
 ```
 
 ### `internal/store`

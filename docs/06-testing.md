@@ -52,7 +52,6 @@ var corpus = []string{
 | `TestAddUpdateDelete` | Returned libraries are correct; the **input library is unchanged** (compare with a deep copy taken beforehand, and check that the slice backing array is not shared by appending to the result); ErrNotFound. |
 | `TestAppend` | Fresh IDs differing from the input IDs; order preserved; limit exceeded leaves the input unchanged. |
 | `TestSearch` | Empty query returns all, sorted; case-insensitive; multiple terms with AND across fields; title-tier before body-tier; equal titles keep file order; non-Latin query (`"日本"`); emoji query; no matches gives an empty non-nil slice. |
-| `TestExcerpt` | Skips leading blank lines; trims; cuts at rune boundary with `…`. |
 | `BenchmarkSearch` | 1,000 snippets with 2 KB bodies and a 2-term query. Must be < 10 ms/op. Record the result in the decision log. |
 
 ## `internal/store`
@@ -118,11 +117,23 @@ Theme and chrome (added with the Slayer finish; see the UI spec's Visual design 
 15. `TestThemeContrastFloors`: every text color is at least 4.5:1 on each surface it can land on, and on both filled buttons.
 16. `TestThemeIsAlwaysDark` and `TestThemeFontFallback`: the theme ignores the OS variant, and falls back to Fyne's fonts when Consolas is missing.
 17. `TestHeaderCountFollowsTheQuery` and `TestRowShowsSelectionBar`: the header count and the selection bar follow the query and the selection.
-15. Editor Tab order is Title → Body → Cancel → Save, and Shift+Tab reverses it. Walk `Canvas().FocusNext()` and `FocusPrevious()`, which is what the real driver calls for Tab. Focusing fields directly would hide an order bug (D20).
+18. Editor Tab order is Title → Body → Cancel → Save, and Shift+Tab reverses it. Walk `Canvas().FocusNext()` and `FocusPrevious()`, which is what the real driver calls for Tab. Focusing fields directly would hide an order bug (D20).
+
+Rows, double-click and the Copy button (D23). Fixtures live in `internal/ui/testdata/fixtures/`: `duplicates.json` (three snippets titled `Greeting`) and `long-titles.json` (200 runes, CJK, an emoji ZWJ sequence, RTL), loaded with `store.DecodeImport` and `snippets.Append`; the 12-item `testdata/sample-import.json` corpus is reused, and a 300-snippet library is generated in the test (`bigLibrary`). The tests tap the real row objects with `test.Tap`:
+
+19. Rows hold only a bar and a title, truncated with an ellipsis.
+20. Double-click on an unselected row selects it, copies its body, and sets the status. A single click selects without copying; two slow clicks, or clicks on different rows, are not a double-click.
+21. After filtering, a double-click copies the row that was clicked.
+22. In the 300-snippet library, after scrolling, a double-click copies the right snippet and leaves its row fully visible.
+23. Double-click does nothing while the editor or a confirmation is open.
+24. With duplicate titles, selecting each shows its own body in the preview and a double-click copies the right one.
+25. Every row is `rowHeight` tall, and consecutive rows are `rowHeight` apart, over the corpus, long-titles, duplicates and large libraries.
+26. The Copy button is at least 112×40 with 16 px text, taller than New, Edit and Delete, starts at x = 12, with the others 8 px apart and centered on it.
+27. In a 520×600 window the search box, list and Copy start at x = 12, the search box and list end at width − 12, and the header and key strips span the full width.
 
 ### Visual review (screenshots without a display)
 
-`TestScreens` renders key states with the software test driver and writes PNGs to `internal/ui/testdata/screens/` (git-ignored), but only when `SNIPER_SCREENS=1` is set. The states are: empty library, populated list with a selection, no matches, the editor with a validation error, the delete confirmation, the recovery window (with and without a backup), About, the import confirmation, and three screens from the Unicode corpus (emoji, CJK, right-to-left) to check font fallback under Consolas. Use `w.Resize(fyne.NewSize(520, 600))`, then `img := w.Canvas().Capture()`, then `png.Encode`.
+`TestScreens` renders key states with the software test driver and writes PNGs to `internal/ui/testdata/screens/` (git-ignored), but only when `SNIPER_SCREENS=1` is set. The states are: empty library, populated list with a selection, no matches, the editor with a validation error, the delete confirmation, the recovery window (with and without a backup), About, the import confirmation, and three screens from the Unicode corpus (emoji, CJK, right-to-left) to check font fallback under Consolas, duplicate titles, long titles, and the 300-snippet library scrolled with a selection. Measure alignment from the PNGs instead of judging by eye: print, per horizontal band, the first and last non-background column (boxes start at 12, text at 16). Use `w.Resize(fyne.NewSize(520, 600))`, then `img := w.Canvas().Capture()`, then `png.Encode`.
 
 After M4, M5, and M6, the agent runs `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens` and **opens the PNGs** (an image-capable Read tool works) to check the layout against the UI spec: nothing clipped, empty states centered, buttons enabled or disabled correctly. Fix anything wrong before the exit check. These screenshots are for review, not golden-image assertions, because font rendering differs between machines.
 

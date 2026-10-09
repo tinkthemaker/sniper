@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "snippets": [
+    {
+      "id": "",
+      "title": "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+      "body": "body of the 200-rune title"
+    },
+    {
+      "id": "",
+      "title": "日本語のとても長いタイトルです。これはテキストの切り詰めを確認するための日本語のタイトルで、画面の幅を超えるほど長く書かれています。",
+      "body": "CJK body"
+    },
+    {
+      "id": "",
+      "title": "Family 👨‍👩‍👧‍👦 and flags 🇯🇵 with 👋🏽 wave, long enough to be cut off at the edge of the list",
+      "body": "emoji ZWJ body"
+    },
+    {
+      "id": "",
+      "title": "عنوان عربي طويل جدا لاختبار اتجاه النص من اليمين إلى اليسار وقطعه عند حافة القائمة في النافذة",
+      "body": "RTL body"
+    }
+  ]
+}

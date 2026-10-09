@@ -151,8 +151,9 @@ func (d dividerTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color
 	return d.Theme.Color(name, v)
 }
 
-// denseTheme removes the gaps between and around list rows. It leaves the inner
-// padding alone, because that is what keeps row text on the text line.
+// denseTheme removes the gap the list adds between its rows, so the row pitch
+// is the row height. It leaves the inner padding alone, because that is what
+// keeps row text on the text line. Wrap only the list in it.
 type denseTheme struct{ fyne.Theme }
 
 func (d denseTheme) Size(name fyne.ThemeSizeName) float32 {
@@ -160,6 +161,16 @@ func (d denseTheme) Size(name fyne.ThemeSizeName) float32 {
 		return 0
 	}
 	return d.Theme.Size(name)
+}
+
+// bigTextTheme sets the text size for the primary button. Wrap only that button.
+type bigTextTheme struct{ fyne.Theme }
+
+func (b bigTextTheme) Size(name fyne.ThemeSizeName) float32 {
+	if name == theme.SizeNameText {
+		return copyTextSize
+	}
+	return b.Theme.Size(name)
 }
 
 func (t *slayerTheme) Icon(name fyne.ThemeIconName) fyne.Resource { return t.base.Icon(name) }

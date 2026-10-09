@@ -44,6 +44,9 @@ type MainWindow struct {
 
 	syncing bool // true while we drive list.Select, so OnSelected ignores it
 
+	lastTapID string    // the row last clicked, to recognize a double-click
+	lastTapAt time.Time // when it was clicked
+
 	editor  *editor        // the open editor, if any
 	dialogs []*shownDialog // dialogs open over the window, oldest first
 
@@ -52,6 +55,8 @@ type MainWindow struct {
 	count        *widget.RichText
 	search       *searchEntry
 	list         *resultList
+	headerStrip  fyne.CanvasObject
+	keyStrip     fyne.CanvasObject
 	emptyLabel   *widget.Label
 	previewTitle *widget.Label
 	previewBody  *widget.Label
@@ -124,7 +129,8 @@ func (m *MainWindow) build() {
 // the text line. Regions are 12 px apart; a header is 8 px from its content.
 func (m *MainWindow) layout() fyne.CanvasObject {
 	brand := widget.NewRichText(microText(brandName, theme.ColorNameError, true), microText("  "+brandSub, theme.ColorNamePlaceHolder, false))
-	header := strip(container.NewStack(brand, m.count))
+	m.headerStrip = strip(container.NewStack(brand, m.count))
+	header := m.headerStrip
 	search := inset(m.search, gapArea, boxLine, gapArea, boxLine)
 	top := container.New(layout.NewCustomPaddedVBoxLayout(0), header, edgeRule(), search)
 
@@ -134,15 +140,18 @@ func (m *MainWindow) layout() fyne.CanvasObject {
 		widget.NewRichText(microText(previewLabel, theme.ColorNamePlaceHolder, true)), m.previewTitle)
 	preview := inset(container.NewBorder(previewHead, nil, nil, nil, container.NewVScroll(m.previewBody)),
 		gapItem, boxLine, 0, boxLine)
-	split := container.NewVSplit(container.NewThemeOverride(listArea, NewTheme()), container.NewThemeOverride(preview, NewTheme()))
+	split := container.NewVSplit(container.NewThemeOverride(listArea, denseTheme{NewTheme()}), container.NewThemeOverride(preview, NewTheme()))
 	split.Offset = 0.55
 	divided := container.NewThemeOverride(split, dividerTheme{NewTheme()})
 
 	// The status reports on the buttons, so it shares their row (proximity),
 	// right-aligned so its text ends on the right text line.
-	buttons := container.New(layout.NewCustomPaddedHBoxLayout(gapItem), m.copyBtn, m.newBtn, m.editBtn, m.deleteBtn)
-	actions := inset(container.NewBorder(nil, nil, buttons, nil, m.status), gapArea, boxLine, gapArea, boxLine)
-	bottom := container.New(layout.NewCustomPaddedVBoxLayout(0), edgeRule(), actions, strip(keyHints()))
+	buttons := container.New(buttonRowLayout{},
+		container.NewThemeOverride(m.copyBtn, bigTextTheme{NewTheme()}), m.newBtn, m.editBtn, m.deleteBtn)
+	status := container.New(vCenterLayout{}, m.status)
+	actions := inset(container.NewBorder(nil, nil, buttons, nil, status), gapArea, boxLine, gapArea, boxLine)
+	m.keyStrip = strip(keyHints())
+	bottom := container.New(layout.NewCustomPaddedVBoxLayout(0), edgeRule(), actions, m.keyStrip)
 	return container.NewBorder(top, bottom, nil, nil, divided)
 }
 
@@ -223,9 +232,8 @@ func (m *MainWindow) updateRow(i widget.ListItemID, o fyne.CanvasObject) {
 		return
 	}
 	s := m.results[i]
+	refs.id = s.ID
 	refs.title.SetText(s.Title)
-	refs.excerpt.Text = snippets.Excerpt(s.Body, 80)
-	refs.rich.Refresh()
 	refs.bar.FillColor = color.Color(color.Transparent)
 	if s.ID == m.selectedID {
 		refs.bar.FillColor = bloodRed
@@ -239,6 +247,28 @@ func (m *MainWindow) onListSelected(i widget.ListItemID) {
 	}
 	m.selectedID = m.results[i].ID
 	m.syncView()
+}
+
+// tapRow handles a click on the row showing snippet id: it selects the row at
+// once, and copies it too when this is the second click on it within
+// doubleClickWindow. The row is found by ID, never by index, so it is right
+// after filtering and scrolling. It does nothing while a dialog is open.
+func (m *MainWindow) tapRow(id string) {
+	if m.modalOpen() || m.indexOf(id) < 0 {
+		return
+	}
+	m.win.Canvas().Focus(m.list)
+	if id != m.selectedID {
+		m.selectedID = id
+		m.syncView()
+	}
+	now := m.deps.Now()
+	if id == m.lastTapID && now.Sub(m.lastTapAt) <= doubleClickWindow {
+		m.lastTapID = ""
+		m.copySelected()
+		return
+	}
+	m.lastTapID, m.lastTapAt = id, now
 }
 
 func (m *MainWindow) indexOf(id string) int {

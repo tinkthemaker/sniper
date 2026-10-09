@@ -61,6 +61,10 @@ Anywhere in the main window
   Ctrl+Shift+D — delete the selected snippet
   Tab / Shift+Tab — move between controls
 
+Mouse
+  Click a snippet — select it
+  Double-click a snippet — copy it
+
 Editor
   Ctrl+S — save
   Escape — cancel`

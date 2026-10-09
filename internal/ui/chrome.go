@@ -2,6 +2,7 @@ package ui
 
 import (
 	"image/color"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -25,6 +26,14 @@ const (
 	stripHeight float32 = 32 // header and key strips
 )
 
+// rowHeight is the height of a list row, which is also the row pitch: the list
+// adds no gap between rows (see listTheme). Fixed, so every row is the same.
+const rowHeight float32 = 24
+
+// doubleClickWindow is how close two clicks on one row must be to count as a
+// double-click. It is Windows' default double-click time.
+const doubleClickWindow = 500 * time.Millisecond
+
 // inset places o inside fixed margins (top, right, bottom, left).
 func inset(o fyne.CanvasObject, top, right, bottom, left float32) fyne.CanvasObject {
 	return container.New(layout.NewCustomPaddedLayout(top, bottom, left, right), o)
@@ -44,6 +53,58 @@ func (stripLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
 	h := objs[1].MinSize().Height
 	objs[1].Resize(fyne.NewSize(size.Width-2*boxLine, h))
 	objs[1].Move(fyne.NewPos(boxLine, float32(int((size.Height-h)/2))))
+}
+
+// Copy is the primary action, so it is bigger than the other buttons: at least
+// copyMinWidth by copyMinHeight, with 16 px text.
+const (
+	copyMinWidth  float32 = 112
+	copyMinHeight float32 = 40
+	copyTextSize  float32 = 16
+)
+
+// buttonRowLayout lays out the action buttons side by side, gapItem apart. The
+// first is the primary button and is at least copyMinWidth by copyMinHeight; the
+// rest keep their own size. All are centered vertically in the row.
+type buttonRowLayout struct{}
+
+func (buttonRowLayout) sizeOf(i int, o fyne.CanvasObject) fyne.Size {
+	s := o.MinSize()
+	if i == 0 {
+		s = fyne.NewSize(max(s.Width, copyMinWidth), max(s.Height, copyMinHeight))
+	}
+	return s
+}
+
+func (l buttonRowLayout) MinSize(objs []fyne.CanvasObject) fyne.Size {
+	var w, h float32
+	for i, o := range objs {
+		s := l.sizeOf(i, o)
+		w, h = w+s.Width, max(h, s.Height)
+	}
+	return fyne.NewSize(w+gapItem*float32(len(objs)-1), h)
+}
+
+func (l buttonRowLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
+	x := float32(0)
+	for i, o := range objs {
+		s := l.sizeOf(i, o)
+		o.Resize(s)
+		o.Move(fyne.NewPos(x, float32(int((size.Height-s.Height)/2))))
+		x += s.Width + gapItem
+	}
+}
+
+// vCenterLayout gives its one object the full width and its own height, centered
+// vertically.
+type vCenterLayout struct{}
+
+func (vCenterLayout) MinSize(objs []fyne.CanvasObject) fyne.Size { return objs[0].MinSize() }
+
+func (vCenterLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
+	h := objs[0].MinSize().Height
+	objs[0].Resize(fyne.NewSize(size.Width, h))
+	objs[0].Move(fyne.NewPos(0, (size.Height-h)/2))
 }
 
 // Fyne v2.8 places custom dialog content padWidth/2 in from each side and
@@ -136,26 +197,51 @@ var keyHintList = []struct{ key, action string }{
 
 // rowRefs are the parts of one list row that updateRow fills in.
 type rowRefs struct {
-	bar     *canvas.Rectangle
-	title   *widget.Label
-	excerpt *widget.TextSegment
-	rich    *widget.RichText
+	bar   *canvas.Rectangle
+	title *widget.Label
+	id    string // the snippet this row currently shows
 }
 
-// newRow builds a two-line row: a bold title over a dim one-line excerpt, and a
-// blood-red bar that shows when selected. The bar is overlaid on the row's left
-// edge rather than placed beside the text, so row text stays on the text line.
+// rowLayout draws a list row: the selection bar down the left edge and the
+// title on the text line, centered vertically. objs are bar, title.
+type rowLayout struct{}
+
+func (rowLayout) MinSize(objs []fyne.CanvasObject) fyne.Size {
+	return fyne.NewSize(objs[1].MinSize().Width, rowHeight)
+}
+
+func (rowLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
+	objs[0].Resize(fyne.NewSize(objs[0].MinSize().Width, size.Height))
+	objs[0].Move(fyne.NewPos(0, 0))
+	h := objs[1].MinSize().Height
+	objs[1].Resize(fyne.NewSize(size.Width, h))
+	objs[1].Move(fyne.NewPos(0, (size.Height-h)/2))
+}
+
+// listRow is one list row. It takes the click itself instead of leaving it to
+// the list's own item, so a double-click can be told apart (see tapRow).
+type listRow struct {
+	widget.BaseWidget
+	m       *MainWindow
+	refs    *rowRefs
+	content fyne.CanvasObject
+}
+
+func (r *listRow) CreateRenderer() fyne.WidgetRenderer { return widget.NewSimpleRenderer(r.content) }
+
+func (r *listRow) Tapped(*fyne.PointEvent) { r.m.tapRow(r.refs.id) }
+
+// newRow builds a one-line row: a bold title and a blood-red bar that shows when
+// selected. The bar is overlaid on the row's left edge rather than placed beside
+// the text, so row text stays on the text line.
 func (m *MainWindow) newRow() fyne.CanvasObject {
 	refs := &rowRefs{bar: canvas.NewRectangle(color.Transparent)}
 	refs.bar.SetMinSize(fyne.NewSize(3, 1))
 	refs.title = widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
 	refs.title.Truncation = fyne.TextTruncateEllipsis
-	refs.excerpt = microText("", theme.ColorNamePlaceHolder, false)
-	refs.rich = widget.NewRichText(refs.excerpt)
-	refs.rich.Truncation = fyne.TextTruncateEllipsis
-	text := container.New(layout.NewCustomPaddedVBoxLayout(0), refs.title, refs.rich)
-	row := container.NewThemeOverride(
-		container.NewStack(text, container.NewBorder(nil, nil, refs.bar, nil)), denseTheme{NewTheme()})
+	content := container.New(rowLayout{}, refs.bar, refs.title)
+	row := &listRow{m: m, refs: refs, content: content}
+	row.ExtendBaseWidget(row)
 	m.rows[row] = refs
 	return row
 }

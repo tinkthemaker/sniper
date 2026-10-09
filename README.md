@@ -19,6 +19,7 @@ Build `dist\Sniper.exe` (see [Build from source](#build-from-source)), then doub
 | Type | Filter by title or body |
 | Down / Up, PageDown / PageUp | Move the selection |
 | Enter | Copy the selected snippet |
+| Double-click a snippet | Select it and copy it |
 | Escape | Clear the search |
 | Ctrl+F | Focus the search box |
 | Ctrl+N / Ctrl+E / Ctrl+Shift+D | New / edit / delete the selected snippet |

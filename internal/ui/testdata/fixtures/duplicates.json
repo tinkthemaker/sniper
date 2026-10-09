@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "snippets": [
+    {
+      "id": "",
+      "title": "Greeting",
+      "body": "Hello,\nThanks for reaching out."
+    },
+    {
+      "id": "",
+      "title": "Greeting",
+      "body": "Hi there!\nQuick question about my order."
+    },
+    {
+      "id": "",
+      "title": "Greeting",
+      "body": "Dear team,\nPlease find the report attached."
+    }
+  ]
+}

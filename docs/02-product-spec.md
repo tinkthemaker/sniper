@@ -27,7 +27,7 @@ A snippet has an `ID`, a `Title`, and a `Body`. All text is UTF-8.
 | Body validity | Not blank (`strings.TrimSpace(body) != ""`). At most **65,536 bytes**. Valid UTF-8. No NUL. |
 | ID | 32 lowercase hex characters from 16 `crypto/rand` bytes. Unique within the library. Never shown to users. |
 | Library size | At most **10,000** snippets. |
-| Duplicate titles | Allowed. The result list's second line (body excerpt) tells them apart. |
+| Duplicate titles | Allowed. Rows show only the title, so the preview pane tells duplicates apart: it shows the selected snippet's body. |
 
 Validation errors name the field and the rule, for example "Title is required." or "Body is too long (70,112 bytes; limit 65,536)." The exact strings are in the UI spec.
 
