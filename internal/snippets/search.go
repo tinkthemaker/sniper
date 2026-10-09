@@ -3,7 +3,6 @@ package snippets
 import (
 	"sort"
 	"strings"
-	"unicode/utf8"
 )
 
 type hit struct {
@@ -60,24 +59,4 @@ func rank(lowerTitle, body string, terms []string) (tier int, ok bool) {
 		}
 	}
 	return 1, true
-}
-
-// Excerpt returns the first non-blank line of body, trimmed. If it is longer than
-// maxRunes, it is cut so the result, including a trailing "…", is maxRunes runes.
-func Excerpt(body string, maxRunes int) string {
-	if maxRunes <= 0 {
-		return ""
-	}
-	line := ""
-	for _, l := range strings.Split(body, "\n") {
-		if l = strings.TrimSpace(l); l != "" {
-			line = l
-			break
-		}
-	}
-	if utf8.RuneCountInString(line) <= maxRunes {
-		return line
-	}
-	r := []rune(line)
-	return string(r[:maxRunes-1]) + "…"
 }

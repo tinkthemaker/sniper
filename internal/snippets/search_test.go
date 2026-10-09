@@ -70,30 +70,6 @@ func TestSearchReturnsNewSlice(t *testing.T) {
 	}
 }
 
-func TestExcerpt(t *testing.T) {
-	tests := []struct {
-		name, body string
-		max        int
-		want       string
-	}{
-		{"skips blank lines", "\n  \n\t\n  hello  \nworld", 80, "hello"},
-		{"short unchanged", "hello", 80, "hello"},
-		{"cut with ellipsis", "abcdefghij", 5, "abcd…"},
-		{"exact fit", "abcde", 5, "abcde"},
-		{"rune boundary", "日本語のテキスト", 4, "日本語…"},
-		{"emoji rune", "😀😀😀😀", 3, "😀😀…"},
-		{"all blank", " \n \n", 10, ""},
-		{"zero max", "abc", 0, ""},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Excerpt(tt.body, tt.max); got != tt.want {
-				t.Errorf("got %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
 func BenchmarkSearch(b *testing.B) {
 	items := make([]Snippet, 1000)
 	filler := strings.Repeat("The Quick Brown Fox jumps over the lazy dog. ", 50)[:2048]
