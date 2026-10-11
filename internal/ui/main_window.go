@@ -2,6 +2,7 @@ package ui
 
 import (
 	"image/color"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -172,7 +173,9 @@ func (m *MainWindow) refresh(preferID string) {
 }
 
 func (m *MainWindow) updateCount() {
-	if m.query == "" {
+	// A query of only spaces matches everything (search splits on whitespace),
+	// so it counts as no query here too.
+	if strings.TrimSpace(m.query) == "" {
 		m.countSeg.Text = countAllText(len(m.lib.Snippets))
 	} else {
 		m.countSeg.Text = countMatchText(len(m.results), len(m.lib.Snippets))

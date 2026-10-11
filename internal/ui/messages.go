@@ -110,15 +110,24 @@ func deleteFailedText(err error) string { return fmt.Sprintf("Could not delete: 
 func importFailedText(err error) string {
 	return fmt.Sprintf("Import failed: %s. Your library was not changed.", unpunctuated(err))
 }
-func importConfirmText(n int, name string) string {
-	return fmt.Sprintf("Import %d snippets from %s? Importing the same file twice creates duplicates.", n, name)
+
+// snippetCount is "1 snippet" or "N snippets".
+func snippetCount(n int) string {
+	if n == 1 {
+		return "1 snippet"
+	}
+	return fmt.Sprintf("%d snippets", n)
 }
-func importedStatus(n int) string { return fmt.Sprintf("Imported %d snippets.", n) }
+
+func importConfirmText(n int, name string) string {
+	return fmt.Sprintf("Import %s from %s? Importing the same file twice creates duplicates.", snippetCount(n), name)
+}
+func importedStatus(n int) string { return fmt.Sprintf("Imported %s.", snippetCount(n)) }
 func importSaveFailedText(err error) string {
 	return fmt.Sprintf("Could not save the import: %s. Your library was not changed.", unpunctuated(err))
 }
 func exportedStatus(n int, name string) string {
-	return fmt.Sprintf("Exported %d snippets to %s.", n, name)
+	return fmt.Sprintf("Exported %s to %s.", snippetCount(n), name)
 }
 func exportFailedText(err error) string { return fmt.Sprintf("Export failed: %v", err) }
 func openFolderFailedText(path string, err error) string {

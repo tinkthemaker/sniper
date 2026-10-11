@@ -134,6 +134,10 @@ Decision: the main window's top-level layout lists its children top to bottom (`
 Why: a full functional QA pass found that Tab from the search box skipped the list and preview and landed on Copy (the center region is first in `NewBorder`'s child order), and that Ctrl+S did nothing after Tab moved focus onto an editor button, because only the editor's entries route it. `TestMainTabOrderFollowsTheSpec` and `TestCtrlSSavesWhileAnEditorButtonHasFocus` guard them.
 Not fixed: Escape does nothing while an editor button has focus, because the driver sends Escape to the focused button's `TypedKey`, not to the canvas.
 
+**D26 — 2026-10-11 — Singular counts; spaces-only search counts as no query**
+Decision: the import confirmation and the import and export statuses say `1 snippet` for one (`snippetCount` in messages.go), and the header shows `<N> IN LIBRARY` when the query is only spaces. Raised by the D25 QA pass (spec issues 2 and 3); the user chose to fix both.
+Why: "Imported 1 snippets." is wrong English, and a spaces-only query matches everything (search splits on whitespace), so `4 OF 4` implied a filter that was not there.
+
 ---
 
 ## Measurements

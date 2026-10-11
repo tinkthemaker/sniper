@@ -104,12 +104,12 @@ Recovery window options:
 
 ## Import and export
 
-- **Export** writes the full library in the schema-v1 format to a path the user picks. The default name is `sniper-export-YYYY-MM-DD.json`. Afterwards the status reads `Exported N snippets to <filename>.`
+- **Export** writes the full library in the schema-v1 format to a path the user picks. The default name is `sniper-export-YYYY-MM-DD.json`. Afterwards the status reads `Exported N snippet(s) to <filename>.`
 - **Import** reads a schema-v1 file. The whole file is decoded and every record is normalized and validated before anything changes. IDs in the file are ignored (they may be missing or duplicated), and every imported snippet gets a fresh ID. Imported snippets are appended in file order.
   - If any record is invalid, nothing is imported, and the error names the 1-based record number and the problem.
   - If the result would exceed 10,000 snippets, nothing is imported.
   - If the file contains zero snippets, show "The file contains no snippets." and stop.
-  - Otherwise confirm: "Import N snippets from <filename>? Importing the same file twice creates duplicates." On confirm, append them and save once. If the save fails, the library stays unchanged.
+  - Otherwise confirm: "Import N snippet(s) from <filename>? Importing the same file twice creates duplicates." On confirm, append them and save once. If the save fails, the library stays unchanged.
 
 ## Privacy and network
 

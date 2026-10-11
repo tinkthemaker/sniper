@@ -30,7 +30,8 @@ Title `Sniper`. Initial size 520×600. Resizable. Closing the window quits the a
 
 - Rows show only the title, bold and truncated with an ellipsis. Duplicate titles are allowed; the preview shows the selected snippet's body, which tells them apart.
 - **Double-click** a row selects it and copies it, exactly like Enter (same clipboard text, same status). A single click selects and does not copy. Double-clicks are ignored while a dialog is open.
-- Header count: `<N> IN LIBRARY` with no query, `<M> OF <N>` while a query is active.
+- Header count: `<N> IN LIBRARY` with no query, `<M> OF <N>` while a query is active. A query of only spaces matches everything, so it counts as no query.
+- Counted nouns agree with the number: `1 snippet`, `0 snippets`, `2 snippets` (in the import confirmation and the import and export statuses).
 - **Copy**, **Edit**, and **Delete** are disabled when nothing is selected. **New** is always enabled. Delete is an ordinary secondary button; red appears only on the confirmation (see Visual design).
 - Empty states replace the list content, with a centered label in the list area:
   - Library empty: `No snippets yet. Press Ctrl+N to create one.`
@@ -154,8 +155,8 @@ Labels sit above their fields, as in Windows text boxes, so both fields share on
 ## Menus
 
 - **File**
-  - **Import…** opens a file-open dialog filtered to `.json`. Then: decode errors give an error dialog `Import failed: <err>. Your library was not changed.`; zero snippets give an info dialog `The file contains no snippets.`; otherwise a confirm dialog `Import N snippets from <filename>? Importing the same file twice creates duplicates.` with buttons **Import** and **Cancel**. Afterwards the status reads `Imported N snippets.`, or on save failure an error dialog `Could not save the import: <err>. Your library was not changed.`
-  - **Export…** opens a file-save dialog with the default name `sniper-export-<YYYY-MM-DD>.json` (from `Now`). Write with `store.Export` to the `URIWriteCloser`, then `Close`. Afterwards the status reads `Exported N snippets to <filename>.`, or on error shows `Export failed: <err>`.
+  - **Import…** opens a file-open dialog filtered to `.json`. Then: decode errors give an error dialog `Import failed: <err>. Your library was not changed.`; zero snippets give an info dialog `The file contains no snippets.`; otherwise a confirm dialog `Import N snippet(s) from <filename>? Importing the same file twice creates duplicates.` with buttons **Import** and **Cancel**. Afterwards the status reads `Imported N snippet(s).`, or on save failure an error dialog `Could not save the import: <err>. Your library was not changed.`
+  - **Export…** opens a file-save dialog with the default name `sniper-export-<YYYY-MM-DD>.json` (from `Now`). Write with `store.Export` to the `URIWriteCloser`, then `Close`. Afterwards the status reads `Exported N snippet(s) to <filename>.`, or on error shows `Export failed: <err>`.
   - **Open data folder** calls `OpenFolder(Store.Dir())`. On error it shows `Could not open <path>: <err>`.
   - Quit (Fyne adds it automatically).
 - **Help**

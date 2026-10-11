@@ -118,6 +118,29 @@ func TestWhitespaceOnlyQueryListsEverything(t *testing.T) {
 	if len(h.m.Results()) != 4 || h.m.emptyLabel.Visible() || h.selectedTitle() != "Address" {
 		t.Errorf("results=%v empty=%v selected=%q", h.titles(), h.m.emptyLabel.Visible(), h.selectedTitle())
 	}
+	// Spaces alone are no query, so the header shows the library count, not "4 OF 4".
+	if h.m.countSeg.Text != "4 IN LIBRARY" {
+		t.Errorf("count = %q, want 4 IN LIBRARY", h.m.countSeg.Text)
+	}
+	h.typeText(" zebra ")
+	if h.m.countSeg.Text != "1 OF 4" {
+		t.Errorf("count with a real query = %q, want 1 OF 4", h.m.countSeg.Text)
+	}
+}
+
+func TestCountWordingIsSingularForOne(t *testing.T) {
+	for _, c := range []struct{ got, want string }{
+		{importConfirmText(1, "a.json"), "Import 1 snippet from a.json? Importing the same file twice creates duplicates."},
+		{importConfirmText(2, "a.json"), "Import 2 snippets from a.json? Importing the same file twice creates duplicates."},
+		{importedStatus(1), "Imported 1 snippet."},
+		{importedStatus(3), "Imported 3 snippets."},
+		{exportedStatus(1, "out.json"), "Exported 1 snippet to out.json."},
+		{exportedStatus(0, "out.json"), "Exported 0 snippets to out.json."},
+	} {
+		if c.got != c.want {
+			t.Errorf("got %q, want %q", c.got, c.want)
+		}
+	}
 }
 
 func TestPreviewFollowsSelection(t *testing.T) {
