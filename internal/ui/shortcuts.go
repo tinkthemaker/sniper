@@ -40,6 +40,7 @@ func (m *MainWindow) registerShortcuts() {
 	for _, a := range m.shortcutActions() {
 		m.win.Canvas().AddShortcut(a.shortcut, func(s fyne.Shortcut) { m.handleShortcut(s) })
 	}
+	m.win.Canvas().AddShortcut(shortcutSave, func(fyne.Shortcut) { m.saveOpenEditor() })
 }
 
 // handleShortcut runs the main-window action bound to s and reports whether s
@@ -74,4 +75,15 @@ func (m *MainWindow) handleNavKey(k fyne.KeyName) bool {
 		return false
 	}
 	return true
+}
+
+// saveOpenEditor makes Ctrl+S work when focus rests on one of the editor's
+// buttons, where no entry is there to route it (Tab can land there). It acts
+// only while the editor itself is the top dialog, never over its discard
+// confirmation.
+func (m *MainWindow) saveOpenEditor() {
+	n := len(m.dialogs)
+	if m.editor != nil && n > 0 && m.dialogs[n-1].dlg == presentable(m.editor.dlg) {
+		m.editor.save()
+	}
 }

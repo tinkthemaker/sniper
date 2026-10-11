@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "snippets": [
+    { "title": "Windows lines", "body": "line one\r\nline two\r\n\r\nline four" },
+    { "title": "Old Mac lines", "body": "alpha\rbeta\rgamma" },
+    { "title": "Title with\r\nbreak", "body": "mixed\r\nand\nand\rall" }
+  ]
+}

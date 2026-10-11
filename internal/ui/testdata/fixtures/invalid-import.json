@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "snippets": [
+    { "title": "First", "body": "one" },
+    { "title": "Second", "body": "two" },
+    { "title": "", "body": "third has no title" },
+    { "title": "Fourth", "body": "four" }
+  ]
+}

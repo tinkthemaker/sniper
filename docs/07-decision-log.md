@@ -129,6 +129,11 @@ Effects: text heights became fractional, which exposed two over-strict layout as
 Supersedes: the D21 font choice, and the note in D22 that Consolas caps need no extra letterspacing. Jost's uppercase microlabels are proportional, and Fyne cannot letterspace text; Futura's wide geometric capitals hold up untracked at 12 px, so they are left as is.
 Revisit if: the microlabels look cramped in the real app, or a script renders badly through fallback.
 
+**D25 — 2026-10-11 — Main window Tab order fixed; Ctrl+S works from the editor's buttons**
+Decision: the main window's top-level layout lists its children top to bottom (`container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, divided, bottom)`), the same fix as D20. A canvas-level Ctrl+S handler (`saveOpenEditor`) saves the editor when it is the top dialog, so the shortcut also works while Cancel or Save has focus.
+Why: a full functional QA pass found that Tab from the search box skipped the list and preview and landed on Copy (the center region is first in `NewBorder`'s child order), and that Ctrl+S did nothing after Tab moved focus onto an editor button, because only the editor's entries route it. `TestMainTabOrderFollowsTheSpec` and `TestCtrlSSavesWhileAnEditorButtonHasFocus` guard them.
+Not fixed: Escape does nothing while an editor button has focus, because the driver sends Escape to the focused button's `TypedKey`, not to the canvas.
+
 ---
 
 ## Measurements
