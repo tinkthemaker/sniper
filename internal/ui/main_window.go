@@ -152,7 +152,9 @@ func (m *MainWindow) layout() fyne.CanvasObject {
 	actions := inset(container.NewBorder(nil, nil, buttons, nil, status), gapArea, boxLine, gapArea, boxLine)
 	m.keyStrip = strip(keyHints())
 	bottom := container.New(layout.NewCustomPaddedVBoxLayout(0), edgeRule(), actions, m.keyStrip)
-	return container.NewBorder(top, bottom, nil, nil, divided)
+	// Tab order follows child order, and NewBorder puts the center first, which
+	// would put the list before the search box; list the children top to bottom (D20).
+	return container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, divided, bottom)
 }
 
 // refresh recomputes the results for the current query and selects preferID if
