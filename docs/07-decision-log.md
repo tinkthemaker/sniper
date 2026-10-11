@@ -122,6 +122,11 @@ Decision:
 Why: rows with one line are denser and scan faster; double-click is the usual way to act on a list item; Copy is the primary action and should look it.
 Revisit if: 500 ms feels too loose, or press-drag on a row needs handling.
 
+**D24 — 2026-10-11 — Main window Tab order fixed; Ctrl+S works from the editor's buttons**
+Decision: the main window's top-level layout lists its children top to bottom (`container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, divided, bottom)`), the same fix as D20. A canvas-level Ctrl+S handler (`saveOpenEditor`) saves the editor when it is the top dialog, so the shortcut also works while Cancel or Save has focus.
+Why: a full functional QA pass found that Tab from the search box skipped the list and preview and landed on Copy (the center region is first in `NewBorder`'s child order), and that Ctrl+S did nothing after Tab moved focus onto an editor button, because only the editor's entries route it. `TestMainTabOrderFollowsTheSpec` and `TestCtrlSSavesWhileAnEditorButtonHasFocus` guard them.
+Not fixed: Escape does nothing while an editor button has focus, because the driver sends Escape to the focused button's `TypedKey`, not to the canvas.
+
 ---
 
 ## Measurements
