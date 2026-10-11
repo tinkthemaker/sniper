@@ -81,21 +81,29 @@ func TestThemeIsAlwaysDark(t *testing.T) {
 	}
 }
 
-func TestThemeFontFallback(t *testing.T) {
-	th := &slayerTheme{base: theme.DefaultTheme()} // no system fonts found
-	for _, s := range []fyne.TextStyle{{}, {Bold: true}, {Monospace: true}, {Symbol: true}} {
-		if th.Font(s) == nil {
-			t.Errorf("no font for %+v when system fonts are missing", s)
+func TestThemeUsesEmbeddedJost(t *testing.T) {
+	th := NewTheme()
+	for style, want := range map[fyne.TextStyle]string{
+		{}:                         "Jost-500-Medium.ttf",
+		{Italic: true}:             "Jost-500-MediumItalic.ttf",
+		{Bold: true}:               "Jost-600-Semi.ttf",
+		{Bold: true, Italic: true}: "Jost-600-SemiItalic.ttf",
+	} {
+		if got := th.Font(style).Name(); got != want {
+			t.Errorf("font for %+v = %s, want %s", style, got, want)
 		}
 	}
-	// Symbol text always uses Fyne's own font, even with Consolas loaded.
-	withFonts := &slayerTheme{base: theme.DefaultTheme(), font: func(s fyne.TextStyle) fyne.Resource {
-		if s.Symbol {
-			return nil
+	// Symbol and monospace text keep Fyne's own fonts.
+	base := theme.DefaultTheme()
+	for _, s := range []fyne.TextStyle{{Symbol: true}, {Monospace: true}} {
+		if got, want := th.Font(s).Name(), base.Font(s).Name(); got != want {
+			t.Errorf("font for %+v = %s, want the base theme's %s", s, got, want)
 		}
-		return fyne.NewStaticResource("x.ttf", []byte{1})
-	}}
-	if withFonts.Font(fyne.TextStyle{Symbol: true}).Name() == "x.ttf" {
-		t.Error("symbol font should come from the base theme")
+	}
+	// The embedded files are real TrueType fonts (sfnt version 0x00010000).
+	for _, r := range []fyne.Resource{fontRegular, fontItalic, fontBold, fontBoldItalic} {
+		if c := r.Content(); len(c) < 1024 || string(c[:4]) != "\x00\x01\x00\x00" {
+			t.Errorf("%s is not a TrueType font (%d bytes)", r.Name(), len(c))
+		}
 	}
 }

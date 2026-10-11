@@ -122,6 +122,13 @@ Decision:
 Why: rows with one line are denser and scan faster; double-click is the usual way to act on a list item; Copy is the primary action and should look it.
 Revisit if: 500 ms feels too loose, or press-drag on a row needs handling.
 
+**D24 — 2026-10-11 — Jost replaces Consolas**
+Decision: the UI face is Jost, a free Futura-spirited geometric sans (SIL Open Font License 1.1, © The Jost Project Authors), embedded in the exe from `internal/ui/fonts/` with its license. Medium (500) is the text weight and Semi (600) the bold, each with its italic; symbol and monospace text keep Fyne's fonts. Consolas is no longer read from `%SystemRoot%\Fonts`.
+Why: the user wanted a less ubiquitous face, something 60s designers loved. Futura was everywhere in 60s advertising, on the Apollo 11 plaque and in *2001: A Space Odyssey*; Jost is a free face in its spirit (Futura itself is proprietary). Embedding it means the work PC renders the same without installing anything, and it adds about 425 KB to the exe. Weights were chosen from side-by-side renders of the corpus: Book (400) looked thin on the dark canvas, so Medium carries text; Semi matches Futura's classic "Demi" weight and Microsoft's advice to emphasize with semibold. Jost covers Latin and Cyrillic; Greek, Devanagari, Thai, CJK and Arabic fall back to system fonts with no missing glyphs (checked headlessly with the corpus).
+Effects: text heights became fractional, which exposed two over-strict layout assumptions. The button row truncated its vertical offset (now rounded, so a button is never more than half a pixel off center), and a row-visibility test compared float edges exactly (now with a 0.01 px tolerance; the measured overshoot was 0.0002 px).
+Supersedes: the D21 font choice, and the note in D22 that Consolas caps need no extra letterspacing. Jost's uppercase microlabels are proportional, and Fyne cannot letterspace text; Futura's wide geometric capitals hold up untracked at 12 px, so they are left as is.
+Revisit if: the microlabels look cramped in the real app, or a script renders badly through fallback.
+
 ---
 
 ## Measurements

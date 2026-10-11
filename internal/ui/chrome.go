@@ -2,6 +2,7 @@ package ui
 
 import (
 	"image/color"
+	"math"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -90,7 +91,9 @@ func (l buttonRowLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
 	for i, o := range objs {
 		s := l.sizeOf(i, o)
 		o.Resize(s)
-		o.Move(fyne.NewPos(x, float32(int((size.Height-s.Height)/2))))
+		// Round (not truncate) to a whole pixel, so a button is never more than
+		// half a pixel off center.
+		o.Move(fyne.NewPos(x, float32(math.Round(float64(size.Height-s.Height)/2))))
 		x += s.Width + gapItem
 	}
 }

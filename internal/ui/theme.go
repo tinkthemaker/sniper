@@ -1,10 +1,8 @@
 package ui
 
 import (
+	_ "embed"
 	"image/color"
-	"os"
-	"path/filepath"
-	"runtime"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
@@ -44,10 +42,9 @@ type slayerTheme struct {
 	font func(fyne.TextStyle) fyne.Resource
 }
 
-// NewTheme returns the Slayer theme. Text uses Consolas from the Windows fonts
-// folder when it is installed and Fyne's default fonts otherwise.
+// NewTheme returns the Slayer theme, with the embedded Jost face for text.
 func NewTheme() fyne.Theme {
-	return &slayerTheme{base: theme.DefaultTheme(), font: systemFonts()}
+	return &slayerTheme{base: theme.DefaultTheme(), font: jostFont}
 }
 
 func (t *slayerTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
@@ -175,36 +172,42 @@ func (b bigTextTheme) Size(name fyne.ThemeSizeName) float32 {
 
 func (t *slayerTheme) Icon(name fyne.ThemeIconName) fyne.Resource { return t.base.Icon(name) }
 
-// systemFonts loads Consolas (regular, bold, italic, bold italic) from the
-// Windows fonts folder. It returns nil on other systems, or if any file is missing.
-func systemFonts() func(fyne.TextStyle) fyne.Resource {
-	if runtime.GOOS != "windows" {
+// The UI face is Jost, a free, Futura-spirited geometric sans (SIL Open Font
+// License; fonts/OFL.txt). It is embedded, so every PC renders the same.
+// Medium (500) is the text weight because the 400 Book weight is thin on the
+// dark canvas; Semi (600) carries emphasis, Futura's classic "Demi" weight.
+//
+//go:embed fonts/Jost-500-Medium.ttf
+var jostMedium []byte
+
+//go:embed fonts/Jost-500-MediumItalic.ttf
+var jostMediumItalic []byte
+
+//go:embed fonts/Jost-600-Semi.ttf
+var jostSemi []byte
+
+//go:embed fonts/Jost-600-SemiItalic.ttf
+var jostSemiItalic []byte
+
+var (
+	fontRegular    = fyne.NewStaticResource("Jost-500-Medium.ttf", jostMedium)
+	fontItalic     = fyne.NewStaticResource("Jost-500-MediumItalic.ttf", jostMediumItalic)
+	fontBold       = fyne.NewStaticResource("Jost-600-Semi.ttf", jostSemi)
+	fontBoldItalic = fyne.NewStaticResource("Jost-600-SemiItalic.ttf", jostSemiItalic)
+)
+
+// jostFont picks the Jost file for a text style. Symbol and monospace text keep
+// Fyne's own fonts (nil means "use the base theme").
+func jostFont(s fyne.TextStyle) fyne.Resource {
+	switch {
+	case s.Symbol, s.Monospace:
 		return nil
+	case s.Bold && s.Italic:
+		return fontBoldItalic
+	case s.Bold:
+		return fontBold
+	case s.Italic:
+		return fontItalic
 	}
-	dir := filepath.Join(os.Getenv("SystemRoot"), "Fonts")
-	load := func(file string) fyne.Resource {
-		data, err := os.ReadFile(filepath.Join(dir, file))
-		if err != nil {
-			return nil
-		}
-		return fyne.NewStaticResource(file, data)
-	}
-	regular, bold := load("consola.ttf"), load("consolab.ttf")
-	italic, boldItalic := load("consolai.ttf"), load("consolaz.ttf")
-	if regular == nil || bold == nil || italic == nil || boldItalic == nil {
-		return nil
-	}
-	return func(s fyne.TextStyle) fyne.Resource {
-		switch {
-		case s.Symbol:
-			return nil // keep Fyne's symbol font
-		case s.Bold && s.Italic:
-			return boldItalic
-		case s.Bold:
-			return bold
-		case s.Italic:
-			return italic
-		}
-		return regular
-	}
+	return fontRegular
 }

@@ -89,4 +89,4 @@ Direct insertion, sync, templates, tray, and global hotkeys are outside the MVP.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The bundled UI font, [Jost](https://github.com/indestructible-type/Jost) by The Jost Project Authors, is under the [SIL Open Font License 1.1](internal/ui/fonts/OFL.txt).

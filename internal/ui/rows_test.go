@@ -83,7 +83,11 @@ func (h *harness) shownRows() []shownRow {
 		if p.Y+row.Size().Height <= listPos.Y || p.Y >= listPos.Y+listSize.Height {
 			continue // pooled or scrolled out
 		}
-		out = append(out, shownRow{row, refs.id, p, p.Y >= listPos.Y && p.Y+row.Size().Height <= listPos.Y+listSize.Height})
+		// Layout positions are float32 and can be fractional (text heights are),
+		// so allow a hundredth of a pixel of rounding error at either edge.
+		const eps = 0.01
+		full := p.Y >= listPos.Y-eps && p.Y+row.Size().Height <= listPos.Y+listSize.Height+eps
+		out = append(out, shownRow{row, refs.id, p, full})
 	}
 	for i := range out { // insertion sort by Y
 		for j := i; j > 0 && out[j].pos.Y < out[j-1].pos.Y; j-- {

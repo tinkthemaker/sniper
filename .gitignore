@@ -5,3 +5,4 @@ dist/
 coverage*
 internal/ui/testdata/screens/
 .claude/settings.local.json
+.claude/worktrees/
