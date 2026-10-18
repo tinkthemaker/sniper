@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sniper LCARS mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000;
+    --orange: #ff9900;
+    --peach: #ff9966;
+    --gold: #ffcc66;
+    --tan: #ffcc99;
+    --lavender: #cc99cc;
+    --peri: #9999ff;
+    --blue: #6688cc;
+    --red: #cc6666;
+    --text: #ffcc99;
+    --dim: #9a8a9a;
+    --gap: 4px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #1d1f24; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px 16px; font-family: "Segoe UI", system-ui, sans-serif; color: #c9ccd2; }
+  .caption { max-width: 560px; font-size: 13px; line-height: 1.5; text-align: center; }
+  .caption b { color: #fff; }
+
+  /* Windows frame */
+  .win { width: 520px; max-width: 100%; border: 1px solid #3a3d44; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+  .titlebar { height: 30px; background: #202020; color: #ddd; font-size: 12px; display: flex; align-items: center; justify-content: space-between; padding-left: 10px; }
+  .titlebar .ctl span { display: inline-block; width: 44px; text-align: center; color: #bbb; }
+  .menubar { background: #000; color: var(--tan); font-family: "Antonio", "Arial Narrow", sans-serif; font-size: 13px; letter-spacing: .06em; padding: 3px 10px; text-transform: uppercase; }
+  .menubar span { margin-right: 14px; }
+
+  /* LCARS canvas */
+  .lcars { background: var(--bg); height: 570px; display: grid; grid-template-columns: 96px 1fr; grid-template-rows: auto 1fr auto; font-family: "Antonio", "Arial Narrow", sans-serif; color: var(--text); padding: 8px 8px 8px 8px; gap: 0; }
+
+  /* top elbow: left column cap + bar across the top */
+  .elbow-top { grid-column: 1 / 3; display: grid; grid-template-columns: 96px 1fr auto auto; align-items: end; height: 56px; }
+  .elbow-top .cap { height: 56px; background: var(--peach); border-top-left-radius: 44px; position: relative; }
+  .elbow-top .cap::after { content: ""; position: absolute; right: -24px; bottom: 0; width: 24px; height: 32px; background: var(--peach); }
+  .elbow-top .cap::before { content: ""; position: absolute; right: -24px; bottom: 0; width: 24px; height: 24px; background: var(--bg); border-top-left-radius: 22px; z-index: 1; }
+  .elbow-top .bar { height: 24px; align-self: start; background: var(--peach); margin-left: 0; }
+  .elbow-top .title { align-self: start; height: 24px; display: flex; align-items: center; padding: 0 10px; font-size: 34px; font-weight: 600; line-height: 1; color: var(--orange); letter-spacing: .04em; transform: translateY(-4px); }
+  .elbow-top .endcap { align-self: start; width: 28px; height: 24px; background: var(--peach); border-radius: 0 12px 12px 0; }
+
+  /* left column segments */
+  .column { display: flex; flex-direction: column; gap: var(--gap); padding-top: var(--gap); }
+  .seg { background: var(--lavender); color: #000; font-size: 13px; font-weight: 600; text-align: right; padding: 4px 8px; display: flex; align-items: flex-end; justify-content: flex-end; letter-spacing: .05em; }
+  .seg.s1 { height: 70px; background: var(--peri); }
+  .seg.s2 { height: 46px; background: var(--gold); }
+  .seg.s3 { flex: 1; background: var(--lavender); }
+  .seg.s4 { height: 40px; background: var(--red); }
+
+  /* main content */
+  .main { --inset: 12px; padding: 4px 4px 6px 16px; display: flex; flex-direction: column; min-height: 0; }
+  .search { display: flex; align-items: stretch; gap: var(--gap); height: 28px; }
+  .search .label { display: flex; align-items: center; background: var(--orange); color: #000; font-weight: 700; font-size: 13px; padding: 0 12px 0 var(--inset); border-radius: 14px 0 0 14px; letter-spacing: .06em; }
+  .search .field { flex: 1; min-width: 0; height: 28px; box-sizing: border-box; border: 2px solid var(--orange); border-radius: 0 14px 14px 0; display: flex; align-items: center; padding: 0 12px; color: var(--dim); font-size: 15px; letter-spacing: .04em; }
+  .search .field .caret { display: inline-block; width: 2px; height: 16px; background: var(--orange); margin-left: 2px; animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .list { margin-top: 10px; display: flex; flex-direction: column; gap: 3px; }
+  .row { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; height: 26px; padding-left: var(--inset); padding-right: var(--inset); font-size: 17px; letter-spacing: .04em; }
+  .row .code { color: var(--peri); font-size: 13px; }
+  .row .t { color: var(--tan); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.sel { background: var(--orange); border-radius: 13px; }
+  .row.sel .code, .row.sel .t { color: #000; font-weight: 600; }
+
+  /* mid divider: a segmented bar */
+  .divider { display: grid; grid-template-columns: 2fr 34px 1fr 1fr 22px; gap: var(--gap); margin: 14px 0 10px; height: 10px; }
+  .divider span:nth-child(1) { background: var(--peach); border-radius: 5px 0 0 5px; }
+  .divider span:nth-child(2) { background: var(--gold); }
+  .divider span:nth-child(3) { background: var(--lavender); }
+  .divider span:nth-child(4) { background: var(--peri); }
+  .divider span:nth-child(5) { background: var(--peach); border-radius: 0 5px 5px 0; }
+
+  .plabel, .ptitle, .pbody { padding-left: var(--inset); }
+  .plabel { color: var(--lavender); font-size: 13px; letter-spacing: .12em; }
+  .ptitle { color: var(--orange); font-size: 22px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin: 2px 0 6px; }
+  .pbody { font-family: "Segoe UI", system-ui, sans-serif; color: #f1e3d3; font-size: 13px; line-height: 1.55; }
+
+  .actions { margin-top: auto; display: flex; align-items: center; gap: var(--gap); padding-top: 10px; }
+  .pill { height: 30px; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px 2px; color: #000; font-weight: 600; font-size: 15px; letter-spacing: .08em; }
+  .pill.copy { background: var(--orange); width: 120px; height: 40px; border-radius: 20px 0 0 20px; font-size: 20px; font-weight: 700; }
+  .pill.new { background: var(--peri); width: 66px; }
+  .pill.edit { background: var(--lavender); width: 66px; }
+  .pill.del { background: var(--red); width: 74px; border-radius: 0 15px 15px 0; }
+  .status { margin-left: auto; color: var(--orange); font-size: 14px; letter-spacing: .06em; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .lcars { grid-template-columns: 96px minmax(0, 1fr); }
+  .main, .actions { min-width: 0; }
+  .pill.new, .pill.edit { width: 58px; }
+  .pill.del { width: 70px; }
+
+  /* bottom elbow with key hints */
+  .elbow-bottom { grid-column: 1 / 3; display: grid; grid-template-columns: 96px minmax(0, 1fr); height: 40px; margin-top: var(--gap); }
+  .elbow-bottom .cap { background: var(--red); border-bottom-left-radius: 34px; position: relative; }
+  .elbow-bottom .cap::after { content: ""; position: absolute; right: -24px; top: 0; width: 24px; height: 40px; background: var(--red); }
+  .elbow-bottom .cap::before { content: ""; position: absolute; right: -24px; top: 0; width: 24px; height: 18px; background: var(--bg); border-bottom-left-radius: 18px; z-index: 1; }
+  .elbow-bottom .bar { align-self: end; height: 22px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto 28px; min-width: 0; gap: var(--gap); margin-left: 24px; }
+  .elbow-bottom .bar span { background: var(--red); color: #000; font-size: 12px; font-weight: 600; letter-spacing: .06em; padding: 3px 10px 0; white-space: nowrap; }
+  .elbow-bottom .bar span:nth-child(2) { background: var(--gold); }
+  .elbow-bottom .bar span:nth-child(3) { background: var(--lavender); }
+  .elbow-bottom .bar .readout { background: var(--red); text-align: left; padding-left: 10px; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .elbow-bottom .bar span:last-child { background: var(--red); border-radius: 0 11px 11px 0; padding: 0; }
+
+  @media (max-width: 560px) { .lcars { grid-template-columns: 72px 1fr; } .elbow-top, .elbow-bottom { grid-template-columns: 72px 1fr auto auto; } }
+</style>
+</head>
+<body>
+  <div class="caption"><b>Throwaway mockup, v3:</b> Sniper's main window, same size and content as today (520 × 600), in a TNG-style frame. Antonio for the frame, labels and buttons; snippet text stays in a readable face. Nothing here is built yet.</div>
+
+  <div class="win">
+    <div class="titlebar"><span>Sniper</span><span class="ctl"><span>—</span><span>☐</span><span>✕</span></span></div>
+    <div class="menubar"><span>File</span><span>Edit</span><span>Help</span></div>
+    <div class="lcars">
+      <div class="elbow-top">
+        <div class="cap"></div>
+        <div class="bar"></div>
+        <div class="title">SNIPER</div>
+        <div class="endcap"></div>
+      </div>
+
+      <div class="column">
+        <div class="seg s1">04 IN LIBRARY</div>
+        <div class="seg s2">SEARCH</div>
+        <div class="seg s3">PREVIEW</div>
+        <div class="seg s4">47-1701</div>
+      </div>
+
+      <div class="main">
+        <div class="search"><span class="label">FIND</span><span class="field">GREET<span class="caret"></span></span></div>
+        <div class="list">
+          <div class="row"><span class="code">01-0417</span><span class="t">Address</span></div>
+          <div class="row sel"><span class="code">02-1138</span><span class="t">Greeting</span></div>
+          <div class="row"><span class="code">03-2265</span><span class="t">Sign-off</span></div>
+          <div class="row"><span class="code">04-3091</span><span class="t">Zebra notes</span></div>
+        </div>
+
+        <div class="divider"><span></span><span></span><span></span><span></span><span></span></div>
+
+        <div class="plabel">PREVIEW · RECORD 02-1138</div>
+        <div class="ptitle">Greeting</div>
+        <div class="pbody">Hello,<br>Thanks for reaching out.</div>
+
+        <div class="actions">
+          <span class="pill copy">COPY</span>
+          <span class="pill new">NEW</span>
+          <span class="pill edit">EDIT</span>
+          <span class="pill del">DELETE</span>
+        </div>
+      </div>
+
+      <div class="elbow-bottom">
+        <div class="cap"></div>
+        <div class="bar"><span class="readout">COPIED · GREETING</span><span>CTRL+N NEW</span><span>CTRL+Z UNDO</span><span></span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
