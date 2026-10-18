@@ -37,7 +37,9 @@ type rowRefs struct {
 	codeText  *widget.RichText
 	title     *widget.TextSegment
 	titleText *widget.RichText
-	id        string // the snippet this row currently shows
+	id        string          // the snippet this row currently shows
+	fade      *fyne.Animation // the highlight fade in progress, if any
+	gen       int             // counts fades, so a superseded one does nothing
 }
 
 // rowLayout draws a list row: the selection pill across the whole row, the
@@ -95,17 +97,28 @@ func (m *MainWindow) newRow() fyne.CanvasObject {
 	return row
 }
 
-// show fills the row for s. Capitals are for display only; the stored title is
-// never changed.
+// show fills the row for the snippet id with title, selected or not. Capitals
+// are for display only; the stored title is never changed.
 func (refs *rowRefs) show(id, title string, selected bool) {
 	refs.id = id
 	refs.code.Text = recordCode(id)
 	refs.title.Text = strings.ToUpper(title)
-	refs.pill.FillColor = color.Color(color.Transparent)
-	refs.code.Style.ColorName, refs.title.Style.ColorName = namePeri, nameTan
 	if selected {
-		refs.pill.FillColor = colOrange
+		refs.paint(1)
+	} else {
+		refs.paint(0)
+	}
+}
+
+// paint draws the row's highlight at fraction f: 0 is unselected, 1 is the full
+// orange pill with black text. Text turns black once the pill is half there, so
+// it is never black on the dark canvas nor tan on bright orange for long.
+func (refs *rowRefs) paint(f float32) {
+	refs.pill.FillColor = fade(colOrange, f)
+	if f >= 0.5 {
 		refs.code.Style.ColorName, refs.title.Style.ColorName = nameBlack, nameBlack
+	} else {
+		refs.code.Style.ColorName, refs.title.Style.ColorName = namePeri, nameTan
 	}
 	refs.pill.Refresh()
 	refs.codeText.Refresh()

@@ -60,6 +60,7 @@ func start(a fyne.App) *instance.Lock {
 		Clipboard:  clipboard.New(a.Clipboard()),
 		OpenFolder: ui.DefaultOpenFolder,
 		Now:        time.Now,
+		Motion:     ui.DefaultMotion(),
 	}
 	if res.State == store.StateDamaged {
 		ui.ShowRecovery(deps, res)

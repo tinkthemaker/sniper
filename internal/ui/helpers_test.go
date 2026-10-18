@@ -38,6 +38,10 @@ type harness struct {
 	opened []string
 }
 
+// harnessMotion is the Motion the next harness is built with; the zero value
+// means no animation. Tests that look at motion set it (see withMotion).
+var harnessMotion Motion
+
 var fixedNow = time.Date(2026, 10, 1, 15, 30, 0, 0, time.UTC)
 
 func sampleLibrary() snippets.Library {
@@ -80,6 +84,7 @@ func newHarnessWrapping(t *testing.T, lib snippets.Library, wrap func(*store.Sto
 	h.deps = Deps{
 		App: h.app, Store: st, Clipboard: h.cb, Now: func() time.Time { return fixedNow },
 		OpenFolder: func(p string) error { h.opened = append(h.opened, p); return nil },
+		Motion:     harnessMotion,
 	}
 	h.m = ShowMain(h.deps, lib)
 	return h

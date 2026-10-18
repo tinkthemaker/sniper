@@ -28,6 +28,7 @@ type Deps struct {
 	Clipboard  clipboard.Writer
 	OpenFolder func(path string) error
 	Now        func() time.Time
+	Motion     Motion // zero value: no animation
 }
 
 // MainWindow owns the library and everything shown for it.
@@ -65,7 +66,9 @@ type MainWindow struct {
 	newBtn       *widget.Button
 	editBtn      *widget.Button
 	deleteBtn    *widget.Button
-	pills        []*pill // the four action pills, in order
+	pills        []*pill         // the four action pills, in order
+	flash        *fyne.Animation // the copy flash in progress, if any
+	painted      string          // the row last drawn as selected, to fade it out
 	frame        *frame
 	parts        *panelParts
 	status       *widget.Label
@@ -85,6 +88,7 @@ func ShowMain(d Deps, lib snippets.Library) *MainWindow {
 	m.refresh("")
 	m.win.Show()
 	m.win.Canvas().Focus(m.search)
+	m.startup()
 	return m
 }
 
@@ -192,7 +196,8 @@ func (m *MainWindow) syncView() {
 		m.list.UnselectAll()
 	}
 	m.syncing = false
-	m.list.Refresh() // the selection bar is drawn by the rows themselves
+	m.list.Refresh() // the highlight is drawn by the rows themselves
+	m.fadeSelection()
 	m.updateCount()
 
 	sel, has := m.selected()
@@ -267,6 +272,26 @@ func (m *MainWindow) tapRow(id string) {
 	m.lastTapID, m.lastTapAt = id, now
 }
 
+// fadeSelection eases the highlight from the row that was selected to the one
+// that is now, when the selection moved. Rows scrolled out of view have nothing
+// to fade.
+func (m *MainWindow) fadeSelection() {
+	prev := m.painted
+	m.painted = m.selectedID
+	if prev == "" || prev == m.selectedID || !m.deps.Motion.Enabled { // nothing was highlighted: nothing to ease from
+		return
+	}
+	for _, refs := range m.rows {
+		switch {
+		case refs.id == "":
+		case refs.id == m.selectedID:
+			m.fadeRow(refs, refs.id, true)
+		case refs.id == prev:
+			m.fadeRow(refs, refs.id, false)
+		}
+	}
+}
+
 func (m *MainWindow) indexOf(id string) int {
 	if id == "" {
 		return -1
@@ -303,6 +328,7 @@ func (m *MainWindow) copySelected() {
 	}
 	m.deps.Clipboard.SetText(s.Body)
 	m.setStatus(copiedStatus(s.Title))
+	m.flashCopy()
 }
 
 func (m *MainWindow) setStatus(text string) { m.status.SetText(text) }

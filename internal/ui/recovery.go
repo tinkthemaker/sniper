@@ -128,7 +128,9 @@ func (r *recoveryWindow) openFolder() {
 // open shows the main window first, then closes this one, so the app never has
 // zero windows in between.
 func (r *recoveryWindow) open(lib snippets.Library, status string) {
-	r.main = ShowMain(r.d, lib)
+	d := r.d
+	d.Motion.skipStartup = true // the recovery window was the first thing on screen
+	r.main = ShowMain(d, lib)
 	r.main.setStatus(status)
 	r.win.Close()
 }

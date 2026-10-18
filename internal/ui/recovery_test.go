@@ -41,6 +41,7 @@ func newRecoveryHarness(t *testing.T, primary, backup *string) *recoveryHarness 
 	h.deps = Deps{
 		App: h.app, Store: h.store, Clipboard: h.cb, Now: func() time.Time { return fixedNow },
 		OpenFolder: func(p string) error { h.opened = append(h.opened, p); return nil },
+		Motion:     harnessMotion,
 	}
 	res := h.store.Load()
 	if res.State != store.StateDamaged {
