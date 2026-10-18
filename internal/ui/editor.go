@@ -22,6 +22,9 @@ type editorEntry struct {
 func newEditorEntry(ed *editor, multiLine bool) *editorEntry {
 	e := &editorEntry{ed: ed}
 	e.MultiLine = multiLine
+	if !multiLine {
+		insetField(&e.Entry)
+	}
 	e.ExtendBaseWidget(e)
 	return e
 }
@@ -93,9 +96,9 @@ func (m *MainWindow) openEditor(existing *snippets.Snippet) {
 		return container.New(layout.NewCustomPaddedVBoxLayout(4), objs...)
 	}
 	top := stack(widget.NewLabelWithStyle(heading, fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		stack(widget.NewLabel(labelTitle), ed.title))
+		stack(widget.NewLabel(labelTitle), container.NewThemeOverride(ed.title, fieldTheme{NewTheme()})))
 	bodyLabel := widget.NewLabel(labelBody)
-	body := inset(container.New(layout.NewBorderLayout(bodyLabel, nil, nil, nil), bodyLabel, ed.body), gapItem, 0, 0, 0)
+	body := inset(container.New(layout.NewBorderLayout(bodyLabel, nil, nil, nil), bodyLabel, container.NewThemeOverride(ed.body, bodyTheme{NewTheme()})), gapItem, 0, 0, 0)
 	buttons := container.New(layout.NewCustomPaddedHBoxLayout(gapItem), layout.NewSpacer(), ed.cancelBtn, save)
 	bottom := inset(stack(ed.errLabel, buttons), gapItem, 0, 0, 0)
 	// Tab order follows child order, and NewBorder puts the center first, so

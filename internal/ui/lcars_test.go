@@ -1,11 +1,14 @@
 package ui
 
 import (
+	"image"
+	"math"
 	"regexp"
 	"strings"
 	"testing"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/widget"
 
 	"github.com/tinkthemaker/sniper/internal/snippets"
 )
@@ -197,5 +200,76 @@ func TestVersionBlockShowsVDEVInTests(t *testing.T) {
 		if got := versionText(in); got != want {
 			t.Errorf("versionText(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// firstInk is the top-left of the first bright (text-colored) pixel found
+// scanning columns, then rows, inside the box.
+func firstInk(img image.Image, x0, y0, x1, y1 int) (int, int, bool) {
+	for x := x0; x < x1; x++ {
+		for y := y0; y < y1; y++ {
+			r, g, b, _ := img.At(x, y).RGBA()
+			if (r+g+b)>>8 > 600 {
+				return x, y, true
+			}
+		}
+	}
+	return 0, 0, false
+}
+
+// cornerClearance is how far (x, y), measured from the field's top-left, is
+// inside a corner of the given radius: 0 on the curve, more further in.
+func cornerClearance(x, y, radius float64) float64 {
+	if x >= radius || y >= radius {
+		return min(x, y) // on a straight edge
+	}
+	return radius - math.Hypot(radius-x, radius-y)
+}
+
+func TestFieldTextAndCaretClearTheRoundedCorners(t *testing.T) {
+	h := newHarness(t, sampleLibrary())
+	h.shortcut(shortcutNew)
+	ed := h.m.editor
+	h.typeText("H") // into the title
+	h.m.win.Canvas().Focus(ed.body)
+	h.typeText("H")
+	img := h.m.win.Canvas().Capture()
+	const want = 4.0 // clear of the curve, in px
+	for name, e := range map[string]*editorEntry{"title": ed.title, "body": ed.body} {
+		p, s := absPos(e), e.Size()
+		x, y, ok := firstInk(img, int(p.X)+2, int(p.Y)+2, int(p.X)+60, int(p.Y)+60)
+		if !ok {
+			t.Fatalf("%s: no text drawn", name)
+		}
+		// The caret starts a pixel left of the glyph and 3 px above its top.
+		cx, cy := float64(x-int(p.X))-1, float64(y-int(p.Y))-3
+		r := float64(min(fieldRadius, s.Height/2))
+		if got := cornerClearance(cx, cy, r); got < want {
+			t.Errorf("%s: the caret at (%.0f, %.0f) is %.1f px from the corner curve (radius %.0f), want at least %v", name, cx, cy, got, r, want)
+		}
+	}
+	// One-line fields do not grow: the title is as tall as a plain entry.
+	if got, plain := ed.title.MinSize().Height, widget.NewEntry().MinSize().Height; got != plain {
+		t.Errorf("title field is %v tall, a plain entry is %v", got, plain)
+	}
+}
+
+func TestSearchFieldClearsItsRoundedEnd(t *testing.T) {
+	h := newHarness(t, sampleLibrary())
+	h.m.win.Resize(fyne.NewSize(520, 600))
+	h.typeText(strings.Repeat("w", 80))
+	p := h.m.parts
+	if h.m.search.Size().Height != searchHeight && absPos(p.outline).Y != absPos(p.findPill).Y {
+		t.Errorf("search is not as tall as the pill")
+	}
+	if p.outline.Size().Height != searchHeight || p.findPill.Size().Height != searchHeight {
+		t.Errorf("field %v and pill %v should be %v tall", p.outline.Size().Height, p.findPill.Size().Height, searchHeight)
+	}
+	end := absPos(p.outline).X + p.outline.Size().Width
+	if got := absPos(h.m.search).X + h.m.search.Size().Width; got > end-searchHeight/2 { // its own 4 px padding keeps the text that far again from the curve
+		t.Errorf("search text can run to x=%v, inside the curve that starts at %v", got, end-searchHeight/2)
+	}
+	if got := absPos(h.m.search).X - absPos(p.outline).X; got < 4 {
+		t.Errorf("search text starts %v px from the field's left edge", got)
 	}
 }

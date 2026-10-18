@@ -1,7 +1,13 @@
 package ui
 
 import (
+	"bytes"
+	"image"
+	"image/color"
+	"image/png"
+
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
@@ -65,4 +71,31 @@ func (e *equalColumns) Layout(objs []fyne.CanvasObject, size fyne.Size) {
 		o.Resize(fyne.NewSize(w, size.Height))
 		o.Move(fyne.NewPos(float32(i)*(w+e.gap), 0))
 	}
+}
+
+// Rounded text fields (see fieldTheme): the corner radius, and how far text and
+// the caret sit from the field's edge, measured to the start of the text.
+const (
+	fieldRadius float32 = 14
+	fieldInset  float32 = 8
+	bodyPad     float32 = 8 // the multi-line field's inner padding (fieldTheme's trick needs a one-line field)
+)
+
+// blankIcon is a transparent 1×1 image. An entry with an icon insets its text
+// for it, which is how fields get a wider left inset without growing taller.
+var blankIcon = func() fyne.Resource {
+	var b bytes.Buffer
+	if err := png.Encode(&b, image.NewNRGBA(image.Rect(0, 0, 1, 1))); err != nil {
+		panic(err)
+	}
+	return fyne.NewStaticResource("blank.png", b.Bytes())
+}()
+
+// insetField gives e a transparent icon on the left and an equally wide spacer
+// on the right, so its text clears the rounded corners (fieldTheme sizes both).
+func insetField(e *widget.Entry) {
+	e.Icon = blankIcon
+	spacer := canvas.NewRectangle(color.Transparent)
+	spacer.SetMinSize(fyne.NewSize(fieldInset, 1))
+	e.ActionItem = spacer
 }

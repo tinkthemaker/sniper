@@ -135,7 +135,7 @@ func (t *lcarsTheme) Size(name fyne.ThemeSizeName) float32 {
 	case theme.SizeNameButtonRadius:
 		return 100 // clamped to half the height: a full pill
 	case theme.SizeNameInputRadius:
-		return 14 // a one-line field is a pill; a tall one stays a rounded box
+		return 6 // Fyne's own fields (the file dialog's name box); ours use fieldTheme
 	case theme.SizeNameSelectionRadius:
 		return rowHeight / 2 // a list row's hover and selection fills are pills
 	case theme.SizeNameCardRadius, theme.SizeNamePopupRadius, theme.SizeNameMenuRadius, theme.SizeNameDialogRadius:
@@ -232,6 +232,42 @@ func (s searchTheme) Size(name fyne.ThemeSizeName) float32 {
 		return 16
 	}
 	return s.Theme.Size(name)
+}
+
+// fieldTheme is for the editor's one-line field: a pill, with its text pulled
+// in from the curve. Fyne insets entry text by the inner padding (4) plus the
+// border, which leaves the text close to a 14 px curve, and raising the inner
+// padding would also make the field taller. An entry that has an icon insets
+// its text by InlineIcon + LineSpacing instead, so the field gets a blank icon
+// (insetField) and this theme sizes it: InlineIcon plus the 4 px line spacing
+// = fieldInset on the left, with a spacer of the same width on the right. The
+// height does not change.
+type fieldTheme struct{ fyne.Theme }
+
+func (f fieldTheme) Size(name fyne.ThemeSizeName) float32 {
+	switch name {
+	case theme.SizeNameInputRadius:
+		return fieldRadius
+	case theme.SizeNameInlineIcon:
+		return fieldInset - f.Theme.Size(theme.SizeNameLineSpacing)
+	}
+	return f.Theme.Size(name)
+}
+
+// bodyTheme is for the editor's multi-line field, which fills the room it is
+// given, so a bigger inner padding costs no height anywhere that matters. It
+// moves the first line down and in from the corner as well, which the icon
+// trick cannot do.
+type bodyTheme struct{ fyne.Theme }
+
+func (f bodyTheme) Size(name fyne.ThemeSizeName) float32 {
+	switch name {
+	case theme.SizeNameInputRadius:
+		return fieldRadius
+	case theme.SizeNameInnerPadding:
+		return bodyPad
+	}
+	return f.Theme.Size(name)
 }
 
 // labelTheme sets the text size and color of one label.
