@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"time"
 
 	"github.com/tinkthemaker/sniper/internal/snippets"
@@ -15,7 +17,15 @@ import (
 const (
 	renameAttempts = 5
 	renameBackoff  = 20 * time.Millisecond
+
+	// DailyBackupsKept is how many dated backups the backups folder keeps.
+	DailyBackupsKept = 7
+	dailyLayout      = "2006-01-02"
 )
+
+// dailyName matches only the files the store itself writes; anything else in
+// the backups folder is the user's and is never deleted.
+var dailyName = regexp.MustCompile(`^snippets-(\d{4}-\d{2}-\d{2})\.json$`)
 
 // DefaultDir returns os.UserConfigDir()/Sniper without creating it.
 func DefaultDir() (string, error) {
@@ -46,9 +56,10 @@ type Store struct {
 	dir      string
 	fs       fileOps
 	lastGood []byte // primary's bytes as last loaded or saved by this process
+	now      func() time.Time
 }
 
-func New(dir string) *Store { return &Store{dir: dir, fs: osFileOps()} }
+func New(dir string) *Store { return &Store{dir: dir, fs: osFileOps(), now: time.Now} }
 
 func (s *Store) Dir() string { return s.dir }
 
@@ -122,6 +133,9 @@ func (s *Store) Save(lib snippets.Library) error {
 		return fmt.Errorf("save library: %w", ErrTooLarge)
 	}
 	if s.lastGood != nil {
+		if err := s.writeDailyBackup(); err != nil {
+			return fmt.Errorf("write daily backup: %w", err)
+		}
 		if err := s.writeAtomic(BackupName, s.lastGood); err != nil {
 			return fmt.Errorf("write backup: %w", err)
 		}
@@ -130,7 +144,54 @@ func (s *Store) Save(lib snippets.Library) error {
 		return fmt.Errorf("write %s: %w", FileName, err)
 	}
 	s.lastGood = data
+	s.pruneDailyBackups()
 	return nil
+}
+
+// writeDailyBackup writes lastGood to backups/snippets-YYYY-MM-DD.json for
+// today (local time) unless that file already exists, so each dated file holds
+// the library as it was when that day's first save began.
+func (s *Store) writeDailyBackup() error {
+	dir := filepath.Join(s.dir, BackupDir)
+	name := "snippets-" + s.now().Format(dailyLayout) + ".json"
+	_, err := s.fs.stat(filepath.Join(dir, name))
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+	if err := s.fs.mkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	return s.writeAtomicIn(dir, name, s.lastGood)
+}
+
+// pruneDailyBackups keeps the newest DailyBackupsKept dated files. Failures are
+// ignored: an old backup left behind must never fail a save.
+func (s *Store) pruneDailyBackups() {
+	dir := filepath.Join(s.dir, BackupDir)
+	entries, err := s.fs.readDir(dir)
+	if err != nil {
+		return
+	}
+	var names []string
+	for _, e := range entries {
+		m := dailyName.FindStringSubmatch(e.Name())
+		if m == nil || e.IsDir() {
+			continue
+		}
+		if _, err := time.Parse(dailyLayout, m[1]); err == nil {
+			names = append(names, e.Name())
+		}
+	}
+	if len(names) <= DailyBackupsKept {
+		return
+	}
+	sort.Strings(names) // the date sorts lexically
+	for _, n := range names[:len(names)-DailyBackupsKept] {
+		_ = s.fs.remove(filepath.Join(dir, n))
+	}
 }
 
 // RestoreBackup validates the backup and atomically copies it over the primary.
@@ -175,8 +236,12 @@ func (s *Store) QuarantinePrimary(now time.Time) (string, error) {
 
 // writeAtomic writes data to a temp file in the same directory, then renames it
 // over name. The destination is never deleted or truncated first.
-func (s *Store) writeAtomic(name string, data []byte) (err error) {
-	f, err := s.fs.createTemp(s.dir, ".sniper-*.tmp")
+func (s *Store) writeAtomic(name string, data []byte) error {
+	return s.writeAtomicIn(s.dir, name, data)
+}
+
+func (s *Store) writeAtomicIn(dir, name string, data []byte) (err error) {
+	f, err := s.fs.createTemp(dir, ".sniper-*.tmp")
 	if err != nil {
 		return err
 	}
@@ -197,7 +262,7 @@ func (s *Store) writeAtomic(name string, data []byte) (err error) {
 	if err = f.Close(); err != nil {
 		return err
 	}
-	return s.renameRetry(tmp, s.path(name))
+	return s.renameRetry(tmp, filepath.Join(dir, name))
 }
 
 // renameRetry retries only the transient Windows sharing errors.

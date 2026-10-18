@@ -21,6 +21,8 @@ type fileOps struct {
 	rename     func(oldpath, newpath string) error
 	remove     func(name string) error
 	stat       func(name string) (os.FileInfo, error)
+	mkdirAll   func(path string, perm os.FileMode) error
+	readDir    func(name string) ([]os.DirEntry, error)
 	sleep      func(d time.Duration)
 }
 
@@ -30,9 +32,11 @@ func osFileOps() fileOps {
 		createTemp: func(dir, pattern string) (tempFile, error) {
 			return os.CreateTemp(dir, pattern)
 		},
-		rename: os.Rename,
-		remove: os.Remove,
-		stat:   os.Stat,
-		sleep:  time.Sleep,
+		rename:   os.Rename,
+		remove:   os.Remove,
+		stat:     os.Stat,
+		mkdirAll: os.MkdirAll,
+		readDir:  os.ReadDir,
+		sleep:    time.Sleep,
 	}
 }

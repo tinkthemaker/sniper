@@ -13,6 +13,7 @@ import (
 const (
 	FileName     = "snippets.json"
 	BackupName   = "snippets.bak.json"
+	BackupDir    = "backups"
 	LockName     = "sniper.lock"
 	MaxFileBytes = 16 << 20
 )
