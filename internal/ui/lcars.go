@@ -49,6 +49,8 @@ const (
 	// Antonio's capitals sit about 2 px below the middle of their line box, so
 	// text that is meant to be centered in a bar is lifted by this much.
 	inkLift float32 = 2
+
+	seam float32 = 8 // how far same-colored shapes overlap, so no seam shows between them
 )
 
 // column blocks, top to bottom; the third takes the rest of the column.
@@ -103,7 +105,7 @@ func newFrame(texts [4]*widget.RichText, status fyne.CanvasObject, panel fyne.Ca
 		topBar:    block(colPeach),
 		topCap:    rounded(colPeach, 44, 0, 0, 0),
 		topJoin:   block(colPeach),
-		topCorner: rounded(colCanvas, 22, 0, 0, 0), // the panel's inner corner, cut out of the join
+		topCorner: rounded(colCanvas, joinWidth, 0, 0, 0), // the panel's inner corner, cut out of the neck
 		topEnd:    rounded(colPeach, 0, 12, 12, 0),
 		brand:     caps(brandName, nameOrange, sizeBrand),
 
@@ -121,7 +123,7 @@ func newFrame(texts [4]*widget.RichText, status fyne.CanvasObject, panel fyne.Ca
 		hintUndoText: caps(hintUndoText, nameBlack, sizeHint),
 		panel:        panel,
 	}
-	objs := []fyne.CanvasObject{f.topBar, f.topCap, f.topJoin, f.topCorner, f.topEnd, f.brand}
+	objs := []fyne.CanvasObject{f.topBar, f.topJoin, f.topCap, f.topCorner, f.topEnd, f.brand}
 	for i := range f.blocks {
 		f.blocks[i] = block(blockColors[i])
 		objs = append(objs, f.blocks[i])
@@ -129,7 +131,7 @@ func newFrame(texts [4]*widget.RichText, status fyne.CanvasObject, panel fyne.Ca
 	for _, t := range texts {
 		objs = append(objs, t)
 	}
-	objs = append(objs, f.botCap, f.botJoin, f.botCorner, f.readout, f.status,
+	objs = append(objs, f.botJoin, f.botCap, f.botCorner, f.readout, f.status,
 		f.hintNew, f.hintNewText, f.hintUndo, f.hintUndoText, f.botEnd, f.panel)
 	return f, container.New(f, objs...)
 }
@@ -156,10 +158,16 @@ func (f *frame) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 	brandMin := f.brand.MinSize()
 	boxW := brandMin.Width + 12 // the title's box: its text plus 10 px each side
 	barEnd := W - m - endCapWidth - boxW
+	// Same-colored shapes overlap instead of abutting: the GL painter feathers
+	// every edge, so two shapes that merely touch would show a seam. The bar
+	// and the neck start under the cap, and the black corner starts at the
+	// bar's lower edge, so the inner curve meets the bar tangentially. The
+	// corner is black and larger than it looks: its square edges lie over the
+	// black canvas, where the feathering cannot show.
+	place(f.topBar, m+col-seam, m, barEnd-(m+col-seam), topBarHeight)
+	place(f.topJoin, m+col-seam, m+seam, joinWidth+seam, topCapHeight-seam)
 	place(f.topCap, m, m, col, topCapHeight)
-	place(f.topBar, m+col, m, barEnd-(m+col), topBarHeight)
-	place(f.topJoin, m+col, m+topBarHeight, joinWidth, topCapHeight-topBarHeight)
-	place(f.topCorner, m+col, m+topBarHeight+8, joinWidth, topCapHeight-topBarHeight-8)
+	place(f.topCorner, m+col, m+topBarHeight, joinWidth+seam, topCapHeight-topBarHeight+seam)
 	place(f.topEnd, W-m-endCapWidth, m, endCapWidth, topBarHeight)
 	place(f.brand, barEnd+6, m+topBarHeight/2-4-brandMin.Height/2, brandMin.Width, brandMin.Height)
 
@@ -187,9 +195,9 @@ func (f *frame) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 	// Bottom elbow: the red cap curves into a bar that holds the status
 	// readout, two key hints and an end cap.
 	top := H - m - botCapHeight
+	place(f.botJoin, m+col-seam, top, joinWidth+seam, botCapHeight)
 	place(f.botCap, m, top, col, botCapHeight)
-	place(f.botJoin, m+col, top, joinWidth, botCapHeight)
-	place(f.botCorner, m+col, top, joinWidth, 18)
+	place(f.botCorner, m+col, top-seam, joinWidth+seam, 18+seam)
 	barY := H - m - botBarHeight
 	place(f.botEnd, W-m-endCapWidth, barY, endCapWidth, botBarHeight)
 	right := W - m - endCapWidth - segGap
@@ -204,7 +212,7 @@ func (f *frame) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 		right -= w + segGap
 	}
 	readoutX := m + col + joinWidth
-	place(f.readout, readoutX, barY, right-readoutX, botBarHeight)
+	place(f.readout, readoutX-seam, barY, right-readoutX+seam, botBarHeight) // starts under the neck
 	sh := f.status.MinSize().Height
 	place(f.status, readoutX+6, barY+(botBarHeight-sh)/2-inkLift, max(right-readoutX-12, 0), sh)
 
