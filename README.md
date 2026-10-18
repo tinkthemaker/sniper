@@ -23,6 +23,7 @@ Build `dist\Sniper.exe` (see [Build from source](#build-from-source)), then doub
 | Escape | Clear the search |
 | Ctrl+F | Focus the search box |
 | Ctrl+N / Ctrl+E / Ctrl+Shift+D | New / edit / delete the selected snippet |
+| Ctrl+Z | Undo the last change this session (create, edit, delete, import; up to 20). Also Edit → Undo |
 | Ctrl+S, Escape | Save, cancel (in the editor) |
 
 Help → Keyboard shortcuts shows the same list. To run from source instead: `go run ./cmd/sniper`.
@@ -35,6 +36,7 @@ The exe is unsigned, so Windows SmartScreen may show "Windows protected your PC"
 |---|---|
 | `snippets.json` | Your library |
 | `snippets.bak.json` | The library as it was before the most recent save |
+| `backups\snippets-<date>.json` | The library as it was before the first save of each day; the newest 7 days are kept |
 | `sniper.lock` | Held while Sniper runs, so a second copy cannot write the library |
 | `snippets.damaged-<time>.json` | A damaged library you chose to move aside |
 
@@ -44,6 +46,8 @@ File → Open data folder opens it. The files are plain text. Moving or deleting
 
 - **Back up:** File → Export… saves everything to a `.json` file (default name `sniper-export-<date>.json`). Or copy `snippets.json`.
 - **Restore or move to another computer:** File → Import… reads an exported file and appends its snippets. Importing the same file twice creates duplicates, so Sniper asks first. Nothing is imported if any record is invalid.
+- **Undo a mistake:** Ctrl+Z (or Edit → Undo) steps back through the last 20 changes made since you started Sniper. It does not survive closing the app.
+- **Go back to an earlier day:** quit Sniper, then copy `backups\snippets-<date>.json` over `snippets.json` in the data folder (File → Open data folder). Do not use Import for this: it appends, so you would get duplicates.
 - **If the library cannot be opened:** Sniper shows a recovery window and changes nothing until you choose. **Restore backup** uses `snippets.bak.json`; **Move damaged file aside and start empty** renames the bad file so you can inspect it.
 
 To try it with awkward text (emoji, tabs, Arabic, Japanese, line breaks), import `testdata/sample-import.json`.

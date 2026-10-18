@@ -61,6 +61,7 @@ On Windows the clipboard wrapper converts `\n` to `\r\n` before writing. `cmd/cl
 | Data directory | `filepath.Join(os.UserConfigDir(), "Sniper")`. On Windows this is `%AppData%\Sniper`. Created with mode `0o700` if missing. |
 | Library | `snippets.json` |
 | Last-good backup | `snippets.bak.json`: the library as it was before the most recent successful save. |
+| Daily backups | `backups/snippets-YYYY-MM-DD.json` (folder mode `0o700`): the library as it was before the first save of that local calendar day. The newest 7 are kept. |
 | Lock file | `sniper.lock` (held by the running instance) |
 | Quarantined damaged files | `snippets.damaged-YYYYMMDD-HHMMSS.json` |
 
@@ -84,6 +85,7 @@ Files are UTF-8 without a BOM, indented 2 spaces, and end with a newline. Reader
 - A change is written to disk **before** the UI shows it or reports `Saved`.
 - A failed save leaves `snippets.json` exactly as it was, keeps the in-memory library unchanged, and keeps the edit form open with an error so the user can retry.
 - `snippets.bak.json` always contains the previously saved good library (after the second save onward).
+- **Daily backups.** On the first successful save of a local calendar day, before the primary is replaced, the same bytes that go to `snippets.bak.json` are also written atomically to `backups/snippets-YYYY-MM-DD.json`. An existing file for today is never touched, so each dated file holds the library as it stood when that day's work began. After a successful save only the newest 7 files matching `snippets-YYYY-MM-DD.json` (by the date in the name) are kept; failing to delete an old one is ignored, and files in the folder that do not match the pattern are never deleted. If the dated backup cannot be written, the save fails and the primary and `snippets.bak.json` are untouched, like any backup failure. The first save of a new install has nothing to back up and writes none. To restore one, quit Sniper and copy the dated file over `snippets.json`; the recovery window does not list them, and importing one would append duplicates.
 
 ### Startup states
 

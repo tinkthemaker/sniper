@@ -138,6 +138,15 @@ Not fixed: Escape does nothing while an editor button has focus, because the dri
 Decision: the import confirmation and the import and export statuses say `1 snippet` for one (`snippetCount` in messages.go), and the header shows `<N> IN LIBRARY` when the query is only spaces. Raised by the D25 QA pass (spec issues 2 and 3); the user chose to fix both.
 Why: "Imported 1 snippets." is wrong English, and a spaces-only query matches everything (search splits on whitespace), so `4 OF 4` implied a filter that was not there.
 
+**D27 — 2026-10-18 — Undo and daily rolling backups**
+Problem: there was one `snippets.bak.json`, overwritten by every save, and no undo, so a delete followed by two more saves was unrecoverable.
+Decision:
+- **Undo (UI only).** `MainWindow` keeps a stack of up to 20 `snippets.Library` values, pushed after each successful save of a create, edit, delete or import (libraries are immutable, so snapshots are cheap). Ctrl+Z and Edit → Undo pop one, save it through `Store.Save` like any change, then publish it; a failed save shows `Could not undo: <err>` and changes nothing. No redo, and an undo is not itself pushed. The stack lives only for the session; the store knows nothing about it.
+- **Routing.** Fyne delivers Ctrl+Z as `*fyne.ShortcutUndo`. It is handled like the other app shortcuts (`shortcutAction` now holds any `fyne.Shortcut`). **Trade-off:** the search box gives up its own text undo, because a focused `widget.Entry` would otherwise consume Ctrl+Z and the box has no history worth keeping beyond a few characters. The editor's entries keep text undo, and the modal guard drops app undo while any dialog is open. The menu item has no `Shortcut` field, because Fyne runs a menu item's shortcut before the focused widget, which would take Ctrl+Z from the editor.
+- **Daily backups (store).** On the first successful save of a local calendar day, before `snippets.bak.json` and the primary are written, `lastGood` is also written atomically to `backups/snippets-YYYY-MM-DD.json` (folder `0o700`). An existing file for the day is left alone, so it holds the state from the start of that day's work. The newest 7 matching files are kept, and pruning ignores its own errors and never touches other names. A failure to write the dated file fails the save with the primary and `.bak` untouched (the same rule as D3). A new install has no `lastGood` and writes none. `Store` has an unexported `now func() time.Time` (default `time.Now`) so tests can pick the day; `store.New` is unchanged.
+- **Not done:** recovery does not list dated backups, because the recovery window's job is one obvious restore; the README explains the manual copy. Importing a dated file would append duplicates, so the README says to copy it over `snippets.json` with Sniper closed.
+Why: seven days of start-of-day snapshots survive any number of same-day saves, and an in-session undo covers the common mistake, with no new dependency, goroutine or setting.
+
 ---
 
 ## Measurements

@@ -69,6 +69,7 @@ Use `t.TempDir()` for every test.
 | `TestSaveFailurePreservesPrimary` | Inject failures via `fileOps` into `createTemp`, the temp-file write (have `createTemp` return a file wrapper whose `Write` fails; this means `createTemp` returns a small unexported interface rather than `*os.File`), `rename`, and the backup write. Each time the primary bytes are unchanged, no `.tmp` files are left, and `lastGood` is unchanged (a later successful save still writes the correct backup). |
 | `TestRenameRetry` (windows build tag) | `rename` fails twice with `syscall.Errno(32)` and then succeeds: Save succeeds. It always fails with Errno 5: Save errors after 5 attempts. A non-retryable error fails immediately. |
 | `TestRealReplaceOnWindows` | No injection: save 50 times in a loop over an existing file. Each time the file decodes and holds the latest content. |
+| `TestDailyBackup*` (`daily_test.go`, with `s.now` set to chosen days) | The first save of a day writes `backups/snippets-<day>.json` holding the pre-save bytes (also when those bytes were loaded, not saved); a second save the same day leaves it alone; the next day adds a new file. An 8th dated file prunes the oldest so 7 remain; files with other names, an invalid date, or a directory with a matching name survive. A failure creating the folder, writing the file or renaming it fails the save and leaves the primary, `snippets.bak.json` and `lastGood` unchanged, with no stray temp files, and a retry succeeds. A failing `readDir` or `remove` does not fail the save. A new install writes no dated backup. |
 | `TestRestoreBackup` | After restoring, Load gives StateOK with the backup's content. An invalid backup gives an error and the primary is untouched. |
 | `TestQuarantine` | The primary is renamed to the timestamped name; a later Load gives StateNew (or Damaged if a backup exists). |
 | `TestExportImportRoundTrip` | Export a library, then `DecodeImport` the output: titles and bodies are equal and in order. |
@@ -111,6 +112,15 @@ Required behaviors:
 12. Recovery: with a damaged primary and a valid backup, Restore opens the main window with the backup content. Move aside, then confirm, creates the damaged file and opens an empty main window.
 13. Empty-state labels appear for an empty library and for no matches. Copy, Edit, and Delete are disabled with no selection.
 14. Ctrl+N while the editor is open does nothing (modal guard).
+
+Undo (D27; `undo_test.go`). Ctrl+Z is delivered as `&fyne.ShortcutUndo{}` to the focused widget if it is `Shortcutable`, otherwise to the canvas, as the driver does:
+
+- Undoing a create, an edit, a delete and an import each restore the library and the file on disk (re-`Load` the store), with the right status and selection; an undone delete or edit under a query that hides it clears the query.
+- The stack is capped at 20 steps; after 20 undos, `Nothing to undo.` and no save happens.
+- A failing `Save` during undo shows `Could not undo: <err>` and leaves the stack, library, file and status unchanged; a retry works.
+- Ctrl+Z works from the search box (which keeps its query), the list and a button, and through Edit → Undo.
+- Inside the editor, Ctrl+Z is the entry's text undo and the library and stack do not change. While any dialog is open, Ctrl+Z and the menu item do nothing.
+- The Edit menu sits between File and Help with one item, **Undo**, disabled while the stack is empty and enabled after a change.
 
 Theme and chrome (added with the Slayer finish; see the UI spec's Visual design section):
 

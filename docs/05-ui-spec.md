@@ -7,7 +7,7 @@ Exact screens, behaviors, keys, and text. Put every user-facing string in `inter
 Title `Sniper`. Initial size 520×600. Resizable. Closing the window quits the app.
 
 ```text
-┌ File  Help ─────────────────────────────────────┐
+┌ File  Edit  Help ─────────────────────────────────────┐
 │ SNIPER  SNIPPETS                    12 IN LIBRARY│  ← header strip, 32 px, full width
 │─────────────────────────────────────────────────│  ← metal edge (1 px), full width
 │  [ Search snippets (Ctrl+F)                  ]  │  ← searchEntry, 12 px above and below
@@ -72,7 +72,7 @@ Rules:
 - **Spacing:** 12 px between regions (header → search → list; rule → buttons → strip); 8 px between buttons and between a header and its content; 4 px between a field label and its field (8 px with the label's inner padding). Related things sit closer than unrelated ones.
 - **Strips:** header and key strips are exactly 32 px high, with their caption text centered vertically.
 - **Dialogs:** custom dialog content (the editor) is placed on the same grid measured from the dialog's edges. `onDialogGrid` cancels Fyne's fixed dialog padding, and the dialog's own heading is left empty and drawn inside the content, because Fyne pins that heading to the dialog edge. Fyne's standard dialogs (confirmations, About, errors) keep Fyne's layout.
-- **Not ours to align:** the menu bar (`File  Help`) is window chrome drawn by Fyne with its own padding, so its text sits 8 px in rather than on the text line.
+- **Not ours to align:** the menu bar (`File  Edit  Help`) is window chrome drawn by Fyne with its own padding, so its text sits 8 px in rather than on the text line.
 - **Key strip:** the shortcuts are shown at the point of use, in red; their actions are dim.
 
 ### Selection rules
@@ -104,6 +104,7 @@ Calling `list.Select(i)` fires `OnSelected`, so guard against re-entrancy with a
 | Ctrl+N | Anywhere in main window | New snippet |
 | Ctrl+E | Anywhere in main window | Edit selected snippet |
 | Ctrl+Shift+D | Anywhere in main window | Delete selected snippet (with confirmation) |
+| Ctrl+Z | Anywhere in main window | Undo the most recent library change made this session (create, edit, delete, import); up to 20 steps, no redo. Not in the editor, where it stays the entry's own text undo |
 | Tab / Shift+Tab | Everywhere | Moves focus: search → list → preview → Copy → New → Edit → Delete |
 | Ctrl+S | Editor | Save |
 | Escape | Editor | Cancel (with discard confirmation if anything changed) |
@@ -119,7 +120,8 @@ A focused `widget.Entry` receives every shortcut and swallows the ones it does n
 3. `searchEntry` embeds `widget.Entry` (call `ExtendBaseWidget`) and overrides `TypedShortcut`: if `handleShortcut` returns true, stop; otherwise call `Entry.TypedShortcut`. It also overrides `TypedKey` for Down, Up, PageDown, PageUp, Escape, and Return/Enter (both `KeyReturn` and `KeyEnter`), and delegates every other key.
 4. The editor's entries use the same pattern with an editor handler (Ctrl+S, Escape).
 5. `resultList` embeds `widget.List` and overrides `TypedKey` for Up, Down, PageUp, PageDown, and Return/Enter, so they act on the selection the same way as in search. It delegates every other key.
-6. **Modal guard.** Fyne dialogs are overlays on the *same* window canvas, so canvas shortcuts still fire while a dialog is open. `MainWindow` tracks `modalOpen bool`, set when any dialog opens and cleared in its close callback. While it is true, `handleShortcut` ignores main-window actions (Ctrl+F/N/E/Shift+D), so Ctrl+N inside the editor cannot open a second editor.
+6. **Modal guard.** Fyne dialogs are overlays on the *same* window canvas, so canvas shortcuts still fire while a dialog is open. `MainWindow` tracks `modalOpen bool`, set when any dialog opens and cleared in its close callback. While it is true, `handleShortcut` ignores main-window actions (Ctrl+F/N/E/Z/Shift+D), so Ctrl+N inside the editor cannot open a second editor.
+7. Ctrl+Z arrives as `*fyne.ShortcutUndo`, not a custom shortcut. It is listed in `shortcutActions` beside the others, so it is registered on the canvas and `handleShortcut` matches it by `ShortcutName()` (`Undo`). The search box therefore runs app undo and loses its own text undo (D27). The editor's entries never pass it to `handleShortcut`, so they keep Fyne's text undo, and a canvas Ctrl+Z with the editor open is dropped by the modal guard. The Edit → Undo menu item has no `Shortcut` set, because Fyne runs a menu item's shortcut before the focused widget and would take Ctrl+Z away from the editor's entries.
 
 Headless tests must prove that Ctrl+N works while search has focus, that Ctrl+S works while the body entry has focus, and that Ctrl+N does nothing while the editor is open.
 
@@ -159,6 +161,9 @@ Labels sit above their fields, as in Windows text boxes, so both fields share on
   - **Export…** opens a file-save dialog with the default name `sniper-export-<YYYY-MM-DD>.json` (from `Now`). Write with `store.Export` to the `URIWriteCloser`, then `Close`. Afterwards the status reads `Exported N snippet(s) to <filename>.`, or on error shows `Export failed: <err>`.
   - **Open data folder** calls `OpenFolder(Store.Dir())`. On error it shows `Could not open <path>: <err>`.
   - Quit (Fyne adds it automatically).
+- **Edit**
+  - **Undo** undoes the most recent library change made in this session: a created, edited or deleted snippet, or an import. `MainWindow` keeps a stack of the libraries from before each saved change (at most 20; the oldest is dropped), pushed only after the save succeeded. Undo saves the previous library through `Store.Save` like any change, and only then publishes it. On a save failure it shows the error dialog `Could not undo: <err>` and leaves the stack and library as they were. There is no redo. The item is disabled while the stack is empty. Statuses: `Undid new snippet “<title>”.`, `Undid edit of “<title>”.`, `Undid delete of “<title>”.`, `Undid import of N snippet(s).`, and with nothing to undo `Nothing to undo.`
+  - After undoing an edit or a delete, the snippet it restored is selected (the query is cleared if it would hide it). After undoing a create or an import, the current selection stays if it still exists; otherwise the delete selection rules apply at its old position.
 - **Help**
   - **Keyboard shortcuts** shows an info dialog listing the keyboard map.
   - **About** shows `Sniper <version>`, the data folder path, and `Snippets and exports are stored as plain text on this computer. Sniper makes no network connections.`

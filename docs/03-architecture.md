@@ -123,9 +123,9 @@ type LoadResult struct {
     BackupAvailable bool             // backup exists AND validates
 }
 
-type Store struct { /* dir string; fs fileOps; lastGood []byte */ }
+type Store struct { /* dir string; fs fileOps; lastGood []byte; now func() time.Time */ }
 
-func New(dir string) *Store
+func New(dir string) *Store // now defaults to time.Now; tests in the package set s.now to choose the day
 func (s *Store) Dir() string
 func (s *Store) Load() LoadResult
 func (s *Store) Save(lib snippets.Library) error            // validate → backup → atomic replace
@@ -228,11 +228,15 @@ m.refresh(selectID(item.ID))
 `Save(lib)`:
 
 1. `snippets.ValidateLibrary(lib)`. Then `data := Encode(lib)`, and reject it if it exceeds `MaxFileBytes`.
-2. **Backup:** if `s.lastGood != nil` (bytes of the primary as last loaded or saved by this process), `writeAtomic(BackupName, s.lastGood)`. If this fails, return the error and do **not** touch the primary.
-3. **Primary:** `writeAtomic(FileName, data)`.
-4. On success, set `s.lastGood = data`.
+2. **Backups:** if `s.lastGood != nil` (bytes of the primary as last loaded or saved by this process):
+   1. **Daily backup:** let `day = s.now().Format("2006-01-02")`. If `backups/snippets-<day>.json` does not exist, create `backups/` (`0o700`) and write `s.lastGood` to it with the same temp-file-plus-rename write as `writeAtomic`, in that folder. If it exists, do nothing.
+   2. `writeAtomic(BackupName, s.lastGood)`.
 
-`writeAtomic(name, data)`:
+   If either step fails, return the error and do **not** touch the primary (the daily backup goes first, so a failure there leaves `snippets.bak.json` as it was too).
+3. **Primary:** `writeAtomic(FileName, data)`.
+4. On success, set `s.lastGood = data`, then prune: list `backups/`, keep the 7 newest names matching `^snippets-(\d{4}-\d{2}-\d{2})\.json$` whose date parses (they sort by name), and `remove` the rest. Every error here (listing or removing) is ignored; a save never fails because of pruning. Directories and non-matching names are never removed.
+
+`writeAtomic(name, data)` (the daily backup uses the same steps with `backups/` as the directory):
 
 1. `f := createTemp(dir, ".sniper-*.tmp")`. The temp file must be in the same directory, so the rename stays on one volume.
 2. `f.Write(data)`, then `f.Sync()`, then `f.Close()`. On any error, `remove(tmp)` and return the error.
