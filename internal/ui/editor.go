@@ -170,6 +170,11 @@ func (ed *editor) save() {
 		ed.showError(saveFailedText(err))
 		return
 	}
+	kind := undoEdit
+	if ed.id == "" {
+		kind = undoCreate
+	}
+	m.pushUndo(undoStep{kind: kind, prev: m.lib, id: item.ID, title: item.Title})
 	m.lib = next
 	ed.close()
 	m.showSaved(item)

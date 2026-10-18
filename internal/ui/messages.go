@@ -34,6 +34,8 @@ const (
 	menuImport     = "Import…"
 	menuExport     = "Export…"
 	menuOpenFolder = "Open data folder"
+	menuEdit       = "Edit"
+	menuUndo       = "Undo"
 	menuHelp       = "Help"
 	menuShortcuts  = "Keyboard shortcuts"
 	menuAbout      = "About"
@@ -59,6 +61,7 @@ Anywhere in the main window
   Ctrl+N — new snippet
   Ctrl+E — edit the selected snippet
   Ctrl+Shift+D — delete the selected snippet
+  Ctrl+Z — undo the last change
   Tab / Shift+Tab — move between controls
 
 Mouse
@@ -85,9 +88,10 @@ Editor
 	brandSub     = "SNIPPETS"
 	previewLabel = "PREVIEW"
 
-	emptyLibraryText   = "No snippets yet. Press Ctrl+N to create one."
-	previewEmptyText   = "Select a snippet to preview it."
-	alreadyRunningText = "Sniper is already running. Switch to it from the taskbar."
+	emptyLibraryText    = "No snippets yet. Press Ctrl+N to create one."
+	previewEmptyText    = "Select a snippet to preview it."
+	nothingToUndoStatus = "Nothing to undo."
+	alreadyRunningText  = "Sniper is already running. Switch to it from the taskbar."
 )
 
 // unpunctuated returns err's text without a trailing period, so templates that
@@ -143,7 +147,13 @@ func restoreFailedText(err error) string { return fmt.Sprintf("Could not restore
 func moveAsideFailedText(err error) string {
 	return fmt.Sprintf("Could not move the damaged file: %v", err)
 }
-func movedStatus(name string) string { return fmt.Sprintf("Moved damaged file to %s.", name) }
+func movedStatus(name string) string        { return fmt.Sprintf("Moved damaged file to %s.", name) }
+func undidCreateStatus(title string) string { return fmt.Sprintf("Undid new snippet “%s”.", title) }
+func undidEditStatus(title string) string   { return fmt.Sprintf("Undid edit of “%s”.", title) }
+func undidDeleteStatus(title string) string { return fmt.Sprintf("Undid delete of “%s”.", title) }
+func undidImportStatus(n int) string        { return fmt.Sprintf("Undid import of %s.", snippetCount(n)) }
+func undoFailedText(err error) string       { return fmt.Sprintf("Could not undo: %v", err) }
+
 func deleteConfirmText(title string) string {
 	return fmt.Sprintf("Delete “%s”? This cannot be undone.", title)
 }

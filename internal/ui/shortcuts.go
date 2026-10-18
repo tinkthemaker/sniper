@@ -23,7 +23,7 @@ var (
 )
 
 type shortcutAction struct {
-	shortcut *desktop.CustomShortcut
+	shortcut fyne.Shortcut
 	run      func()
 }
 
@@ -33,6 +33,7 @@ func (m *MainWindow) shortcutActions() []shortcutAction {
 		{shortcutNew, m.newSnippet},
 		{shortcutEdit, m.editSelected},
 		{shortcutDelete, m.deleteSelected},
+		{&fyne.ShortcutUndo{}, m.undoLast},
 	}
 }
 

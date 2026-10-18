@@ -75,17 +75,10 @@ func (m *MainWindow) deleteSnippet(s snippets.Snippet) {
 		m.showError(deleteFailedText(err))
 		return
 	}
+	m.pushUndo(undoStep{kind: undoDelete, prev: m.lib, id: s.ID, title: s.Title})
 	m.lib = next
 
 	// The result now at the deleted index, else the one before it, else none.
-	remaining := snippets.Search(m.lib.Snippets, m.query)
-	pick := ""
-	switch {
-	case at >= 0 && at < len(remaining):
-		pick = remaining[at].ID
-	case len(remaining) > 0:
-		pick = remaining[len(remaining)-1].ID
-	}
-	m.refresh(pick)
+	m.refresh(m.pickAfterRemoval(at))
 	m.setStatus(deletedStatus(s.Title))
 }

@@ -225,7 +225,7 @@ func TestExportFileDialogDefaultName(t *testing.T) {
 func TestMenusAndHelpDialogs(t *testing.T) {
 	h := newHarness(t, sampleLibrary())
 	menu := h.m.win.MainMenu()
-	if menu == nil || len(menu.Items) != 2 || menu.Items[0].Label != "File" || menu.Items[1].Label != "Help" {
+	if menu == nil || len(menu.Items) != 3 || menu.Items[0].Label != "File" || menu.Items[1].Label != "Edit" || menu.Items[2].Label != "Help" {
 		t.Fatalf("main menu = %+v", menu)
 	}
 	labels := func(i int) (out []string) {
@@ -237,8 +237,11 @@ func TestMenusAndHelpDialogs(t *testing.T) {
 	if !equalStrings(labels(0), []string{"Import…", "Export…", "Open data folder"}) {
 		t.Errorf("File menu = %v", labels(0))
 	}
-	if !equalStrings(labels(1), []string{"Keyboard shortcuts", "About"}) {
-		t.Errorf("Help menu = %v", labels(1))
+	if !equalStrings(labels(1), []string{"Undo"}) {
+		t.Errorf("Edit menu = %v", labels(1))
+	}
+	if !equalStrings(labels(2), []string{"Keyboard shortcuts", "About"}) {
+		t.Errorf("Help menu = %v", labels(2))
 	}
 
 	menu.Items[0].Items[2].Action() // Open data folder
@@ -246,7 +249,7 @@ func TestMenusAndHelpDialogs(t *testing.T) {
 		t.Errorf("OpenFolder calls = %v, want [%s]", h.opened, h.store.Dir())
 	}
 
-	menu.Items[1].Items[1].Action() // About
+	menu.Items[2].Items[1].Action() // About
 	top := h.topDialog()
 	if top == nil || !strings.Contains(top.message, "Sniper dev") || !strings.Contains(top.message, h.store.Dir()) ||
 		!strings.Contains(top.message, "plain text") || !strings.Contains(top.message, "no network connections") {
@@ -258,9 +261,9 @@ func TestMenusAndHelpDialogs(t *testing.T) {
 	}
 	h.dismissTop()
 
-	menu.Items[1].Items[0].Action() // Keyboard shortcuts
+	menu.Items[2].Items[0].Action() // Keyboard shortcuts
 	top = h.topDialog()
-	if top == nil || !strings.Contains(top.message, "Ctrl+Shift+D") || !strings.Contains(top.message, "Ctrl+S") {
+	if top == nil || !strings.Contains(top.message, "Ctrl+Shift+D") || !strings.Contains(top.message, "Ctrl+S") || !strings.Contains(top.message, "Ctrl+Z") {
 		t.Errorf("shortcuts help = %+v", top)
 	}
 }

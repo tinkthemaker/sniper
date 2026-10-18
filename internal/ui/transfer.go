@@ -70,6 +70,7 @@ func (m *MainWindow) applyImport(items []snippets.Snippet) {
 		m.showError(importSaveFailedText(err))
 		return
 	}
+	m.pushUndo(undoStep{kind: undoImport, prev: m.lib, n: len(items)})
 	m.lib = next
 	m.refresh(m.selectedID) // keeps the selection if it is still a result
 	m.setStatus(importedStatus(len(items)))

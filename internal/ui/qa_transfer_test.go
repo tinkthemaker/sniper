@@ -318,11 +318,11 @@ func TestMenuItemsOpenTheFileDialogs(t *testing.T) {
 
 func TestHelpDialogsListEveryDocumentedKey(t *testing.T) {
 	h := newHarness(t, sampleLibrary())
-	h.m.win.MainMenu().Items[1].Items[0].Action()
+	h.m.win.MainMenu().Items[2].Items[0].Action()
 	top := h.topDialog()
 	for _, key := range []string{
 		"Down / Up", "PageDown / PageUp", "Enter", "Escape", "Ctrl+F", "Ctrl+N", "Ctrl+E",
-		"Ctrl+Shift+D", "Tab / Shift+Tab", "Ctrl+S", "Double-click",
+		"Ctrl+Shift+D", "Ctrl+Z", "Tab / Shift+Tab", "Ctrl+S", "Double-click",
 	} {
 		if !strings.Contains(top.message, key) {
 			t.Errorf("the shortcuts help does not mention %q", key)

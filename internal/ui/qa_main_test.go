@@ -265,7 +265,7 @@ func TestMenuItemsAreBlockedWhileADialogIsOpen(t *testing.T) {
 	h := newHarness(t, sampleLibrary())
 	menu := h.m.win.MainMenu()
 	h.m.showAbout()
-	for _, i := range []struct{ menu, item int }{{0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}} {
+	for _, i := range []struct{ menu, item int }{{0, 0}, {0, 1}, {0, 2}, {1, 0}, {2, 0}, {2, 1}} {
 		menu.Items[i.menu].Items[i.item].Action()
 	}
 	if len(h.m.dialogs) != 1 || len(h.opened) != 0 {

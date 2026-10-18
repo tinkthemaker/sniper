@@ -5,7 +5,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 )
 
-// buildMenu creates the File and Help menus. Fyne adds Quit to File itself.
+// buildMenu creates the File, Edit and Help menus. Fyne adds Quit to File itself.
 // Menu actions do nothing while a dialog is open, like the keyboard shortcuts.
 func (m *MainWindow) buildMenu() *fyne.MainMenu {
 	item := func(label string, action func()) *fyne.MenuItem {
@@ -20,11 +20,14 @@ func (m *MainWindow) buildMenu() *fyne.MainMenu {
 		item(menuExport, m.exportFile),
 		item(menuOpenFolder, m.openDataFolder),
 	)
+	m.undoItem = item(menuUndo, m.undoLast)
+	m.undoItem.Disabled = len(m.undo) == 0
+	edit := fyne.NewMenu(menuEdit, m.undoItem)
 	help := fyne.NewMenu(menuHelp,
 		item(menuShortcuts, m.showShortcuts),
 		item(menuAbout, m.showAbout),
 	)
-	return fyne.NewMainMenu(file, help)
+	return fyne.NewMainMenu(file, edit, help)
 }
 
 func (m *MainWindow) showShortcuts() {

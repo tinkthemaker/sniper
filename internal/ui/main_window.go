@@ -48,6 +48,9 @@ type MainWindow struct {
 	lastTapID string    // the row last clicked, to recognize a double-click
 	lastTapAt time.Time // when it was clicked
 
+	undo     []undoStep     // library changes saved this session, newest last
+	undoItem *fyne.MenuItem // Edit → Undo
+
 	editor  *editor        // the open editor, if any
 	dialogs []*shownDialog // dialogs open over the window, oldest first
 
