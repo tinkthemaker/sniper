@@ -4,76 +4,72 @@ Exact screens, behaviors, keys, and text. Put every user-facing string in `inter
 
 ## Main window
 
-Title `Sniper`. Initial size 520×600. Resizable. Closing the window quits the app.
+Title `Sniper`. Initial size 520×600. Resizable. Closing the window quits the app. The look is an LCARS-style frame; the reference is `docs/design/lcars-mockup-v3.html` and its PNG.
 
 ```text
 ┌ File  Edit  Help ─────────────────────────────────────┐
-│ SNIPER  SNIPPETS                    12 IN LIBRARY│  ← header strip, 32 px, full width
-│─────────────────────────────────────────────────│  ← metal edge (1 px), full width
-│  [ Search snippets (Ctrl+F)                  ]  │  ← searchEntry, 12 px above and below
-│ ▌Greeting                          (bold)       │  ← widget.List. Row = the title only (ellipsis),
-│  Sign-off                                       │    24 px high; 3 px blood-red bar overlaid on
-│  Zebra notes                                    │    the row edge when selected; 8 px clear
-│                                                 │    above the divider
-│──────────────── VSplit (0.55) ──────────────────│  ← divider in metal edge, dim grip
-│  PREVIEW                           (microlabel) │
-│  Greeting                          (bold)       │  ← preview title
-│  Hello,                                         │  ← preview body: Label, Selectable,
-│  Thanks for reaching out.                       │    TextWrapWord, inside VScroll
-│─────────────────────────────────────────────────│
-│  ┌────────┐                                     │
-│  │  Copy  │ [New] [Edit] [Delete]  Copied “Greeting”.│ ← Copy 112×40; the rest 8 px apart, centered
-│  └────────┘                                     │    on it; status right-aligned, centered
-│ Enter copy  Ctrl+N new  Ctrl+E edit  Ctrl+Shift+D delete │ ← key strip, 32 px
-└─────────────────────────────────────────────────┘
+│ ╭──────────────────────────────────────  SNIPER  ▮    │ ← top elbow: peach cap, bar, title, end cap
+│ │ 12 IN LIB │ ╭ FIND ▮ ( Search snippets (Ctrl+F) ) ╮  │ ← block 1 (periwinkle): the count
+│ ├───────────┤ │  01-0417  ADDRESS                    │ ← list rows: code, then title in caps
+│ │ SEARCH    │ │ ▐02-1138  GREETING   ▌ orange pill   │ ← block 2 (gold)
+│ ├───────────┤ │  03-2265  SIGN-OFF                   │
+│ │           │ │ ▬▬▬▬▬▬ ▬ ▬▬▬ ▬▬▬ ▬▬▬                  │ ← fixed segmented divider
+│ │ PREVIEW   │ │  PREVIEW · RECORD 02-1138            │ ← block 3 (lavender, takes the rest)
+│ │           │ │  GREETING            (orange caps)   │
+│ │           │ │  Hello,                (Jost body)   │
+│ ├───────────┤ │ ╭──COPY──╮ NEW EDIT DELETE)          │
+│ │ V0.1.0    │ ╰───────────────────────────────────── │ ← block 4 (red): the version
+│ ╰─ Copied “Greeting”.      │CTRL+N NEW│CTRL+Z UNDO│▮ │ ← bottom elbow: red cap, status readout, hints
+└────────────────────────────────────────────────────────┘
 ```
 
-- Rows show only the title, bold and truncated with an ellipsis. Duplicate titles are allowed; the preview shows the selected snippet's body, which tells them apart.
+- **Left column** (96 px wide, blocks 4 px apart, labels black in the bottom-right corner of each block):
+  1. periwinkle: the count, `<N> IN LIBRARY` with no query, `<M> OF <N>` while a query is active. A query of only spaces matches everything, so it counts as no query.
+  2. gold: `SEARCH`.
+  3. lavender, takes the rest of the column: `PREVIEW`.
+  4. red: the version, `V<version>` in capitals, from the app metadata; `VDEV` when the build has none.
+- **Search:** an orange `FIND` pill joined to an orange-outlined field of the same height, 4 px apart (the pill's left end and the field's right end are rounded). The field is the existing `searchEntry`, so its keys and shortcut routing are unchanged.
+- **List rows** are 24 px high with no gap (the row pitch is `rowHeight`). A row is a record code (periwinkle, 13 px) and the title in capitals (Antonio, tan, 17 px, ellipsized). The selected row is an orange pill (24 px, fully rounded ends) with black text. Capitals are display only: stored titles, the preview body and search are untouched.
+- **Record codes** are `NN-NNNN`, derived only from the snippet ID (FNV-1a of the ID), so a snippet keeps its code when the list is filtered, scrolled or reordered.
 - **Double-click** a row selects it and copies it, exactly like Enter (same clipboard text, same status). A single click selects and does not copy. Double-clicks are ignored while a dialog is open.
-- Header count: `<N> IN LIBRARY` with no query, `<M> OF <N>` while a query is active. A query of only spaces matches everything, so it counts as no query.
+- **Divider:** a fixed segmented bar (peach, gold, lavender, periwinkle, peach; 10 px, 4 px apart, outer ends rounded) between the list and the preview. It replaces the old resizable split; the list takes 55% of the room between the search and the buttons, and the preview the rest.
+- **Preview:** a lavender label `PREVIEW · RECORD <code>` (just `PREVIEW` with no selection), the title in orange Antonio capitals, and the body in Jost, selectable and word-wrapped inside a scroll. With no selection the body shows `Select a snippet to preview it.`
+- **Buttons** (all black Antonio capitals, 4 px apart, vertically centered on COPY): **COPY** is a large orange pill (120×40, left end rounded, starts on the pill line); **NEW** periwinkle; **EDIT** lavender; **DELETE** red with its right end rounded. COPY, EDIT and DELETE are disabled when nothing is selected; NEW is always enabled. A disabled pill drops to a dim version of its color and its label dims, so it stays clearly different from an enabled one. Delete asks for confirmation as before.
+- **Status readout:** the status message sits in the red bottom bar, left-aligned and ellipsized, with `CTRL+N NEW` (gold) and `CTRL+Z UNDO` (lavender) hint segments to its right and an end cap. It keeps its message until the next action replaces it. No timers.
 - Counted nouns agree with the number: `1 snippet`, `0 snippets`, `2 snippets` (in the import confirmation and the import and export statuses).
-- **Copy**, **Edit**, and **Delete** are disabled when nothing is selected. **New** is always enabled. Delete is an ordinary secondary button; red appears only on the confirmation (see Visual design).
 - Empty states replace the list content, with a centered label in the list area:
   - Library empty: `No snippets yet. Press Ctrl+N to create one.`
   - No matches: `No snippets match “<query>”.`
-- The preview with no selection shows `Select a snippet to preview it.`
-- The status sits on the button row, right-aligned, because it reports on those actions. It keeps its message until the next action replaces it. No timers.
 
-## Visual design (Slayer finish)
+## Visual design (LCARS finish)
 
-The look is the **Slayer** finish from the Screech tool: blood red on black iron, with ember as the hot end. It is a Fyne theme (`internal/ui/theme.go`) plus a few chrome helpers (`chrome.go`). It is always dark, whatever the OS setting.
+The look follows `docs/design/lcars-mockup-v3.html`: a black canvas, pastel blocks, and Antonio capitals. It is a Fyne theme (`internal/ui/theme.go`), a frame laid out in `internal/ui/lcars.go`, and the rows in `internal/ui/rows.go`. It is always dark, whatever the OS setting. The name and marks of the show it echoes are not used anywhere in the app.
 
 | Role | Value | Used for |
 |---|---|---|
-| Canvas | `#0A0A0A` | window background |
-| Panel | `#100908` | inputs, menus |
-| Surface | `#211211` | header and key strips, dialogs |
-| Raised | `#2E1816` | secondary buttons (one step above the surface) |
-| Selection | `#351A19` | selected row |
-| Hover | `#F5EAEA` at 6% | translucent veil over hovered rows and buttons |
-| Metal edge | `#510A09` | input borders, rules between regions |
-| Text bright / mid / dim | `#F5EAEA` / `#C0AEAC` / `#A38A89` | body, secondary, microlabels |
-| Blood red | `#C21A16` | structure only: selection bar, danger |
-| Red text | `#E8433C` | key chips, error text, the Delete confirm button |
-| Ember | `#FF6A18` | action and focus: Copy button, focus rings, links |
+| Canvas | `#000000` | window background, inputs, menus |
+| Orange | `#FF9900` | action and focus: FIND, the selected row, COPY, the preview title, outlines |
+| Peach | `#FF9966` | the top elbow and bar, divider ends |
+| Gold | `#FFCC66` | block 2, the `CTRL+N` hint |
+| Tan | `#FFCC99` | list titles, the search text |
+| Lavender | `#CC99CC` | block 3, EDIT, the preview label, the `CTRL+Z` hint |
+| Periwinkle | `#9999FF` | block 1, NEW, record codes |
+| Red | `#CC6666` | block 4, DELETE, the bottom elbow, error text |
+| Ink | `#F1E3D3` | running text (preview body, dialogs) |
+| Dim | `#9A8A9A` | placeholders |
+| Dialog surface / raised | `#1B151B` / `#332736` | dialogs, and the quiet buttons on them |
 
 Rules:
 
-- **Blood red never colors small text.** It is 3.3:1 on the canvas. Red that must be read uses red text; actions use ember. `TestThemeContrastFloors` keeps every text color at 4.5:1 or better on the surfaces it can land on.
-- **One primary per view.** Ember fills at most one button (Copy). Other buttons use the quiet raised fill `#2E1816`, one step above the surface, so they still read as buttons, including on dialogs, whose background is the surface color. Hover is a translucent light veil (`#F5EAEA` at 6%) blended over whatever it covers.
-- **Type:** Jost, a free Futura-spirited geometric sans (SIL Open Font License), embedded in the exe so every PC renders the same: Medium (500) for text and Semi (600) for bold, each with its italic (`internal/ui/fonts/`). Symbol and monospace text keep Fyne's fonts. Scripts Jost lacks (Greek, Devanagari, Thai, CJK, Arabic) fall back to the system fonts. 14 px text, 12 px captions, no other sizes. Microlabels (`SNIPER`, `PREVIEW`, the count) are uppercase captions; everything else is sentence case.
-- **Shape:** 2 px radii, 1 px edges, no gradients, glow, or shadows. Dialogs use the surface color so they stand off the window.
-- **Density:** list rows are 24 px high with no gap between them, so the row pitch is 24 px (it was 28.4: a 24.4 px row plus the list's 4 px gap). The title is centered vertically and sits on the text line. The list drops its gap through `denseTheme`; the 4 px inner padding stays, so row text stays on the text line.
-- **Copy button:** the primary action, at least 112×40 with 16 px bold text, set by `buttonRowLayout` and a text-size theme override on that button only. It starts on the box line; New, Edit and Delete keep their size, sit 8 px right of it and are centered on it. The status is centered on the same line. The row keeps 12 px above and below.
-- **Grid.** Every margin is on a 4 px grid, and two vertical lines run down every window and dialog (constants in `chrome.go`):
-  - **Box line, 12 px in from each side:** search box, list (and its selection), buttons, editor fields.
-  - **Text line, 16 px in:** all text. Widgets inset their text by the theme's 4 px inner padding, so a widget on the box line has its text on the text line. Windows asks for 16 px between a surface edge and its text.
-  - **Edge to edge:** strips, rules and the split divider. The main and recovery windows turn off Fyne's window padding so these reach the edges.
-- **Spacing:** 12 px between regions (header → search → list; rule → buttons → strip); 8 px between buttons and between a header and its content; 4 px between a field label and its field (8 px with the label's inner padding). Related things sit closer than unrelated ones.
-- **Strips:** header and key strips are exactly 32 px high, with their caption text centered vertically.
-- **Dialogs:** custom dialog content (the editor) is placed on the same grid measured from the dialog's edges. `onDialogGrid` cancels Fyne's fixed dialog padding, and the dialog's own heading is left empty and drawn inside the content, because Fyne pins that heading to the dialog edge. Fyne's standard dialogs (confirmations, About, errors) keep Fyne's layout.
-- **Not ours to align:** the menu bar (`File  Edit  Help`) is window chrome drawn by Fyne with its own padding, so its text sits 8 px in rather than on the text line.
-- **Key strip:** the shortcuts are shown at the point of use, in red; their actions are dim.
+- **Text on a colored block is black.** Every text color is at 4.5:1 or better on every surface it lands on, and black is at 4.5:1 or better on every block color, also under the hover and focus veils (`TestThemeContrastFloors`).
+- **Type:** two faces, both under the SIL Open Font License and embedded in the exe (`internal/ui/fonts/`): **Antonio** SemiBold, a tall condensed gothic, for everything bold (titles, labels, buttons, headings), and **Jost** Medium for running text, with Medium Italic and Semi Italic for the italic styles. Antonio is used in its one weight, so every Antonio text is `TextStyle{Bold: true}`. Symbol and monospace text keep Fyne's fonts; scripts the faces lack (Greek, Cyrillic, Devanagari, Thai, CJK, Arabic) fall back to the system fonts. Sizes: 14 text and 12 captions; in the main window 13 (codes, labels), 17 (rows), 22 (preview title), 34 (SNIPER) and 12 (hints).
+- **Shape:** the frame is flat rectangles with a radius per corner (Fyne 2.8's `canvas.Rectangle`): no gradients, glow or shadows. Buttons in dialogs are full pills; fields are 14 px rounded.
+- **The frame.** The top elbow is a peach cap (96×56, 44 px top-left radius) joined to a 24 px bar by a neck; the neck's lower part is cut by a black 22 px-radius rectangle, which is the panel's rounded inner corner. `SNIPER` (orange, 34 px) breaks the bar on the right, closed by a 28 px end cap. The bottom elbow mirrors it in red (96×40, 34 px bottom-left radius) with a 22 px bar holding the readout, the two hints and an end cap. `frame.Layout` computes every position from the window size, so the frame stretches with the window: the column's third block, the readout and the panel grow.
+- **Two lines** run down the panel (constants in `lcars.go`). **Pill line, x = 120** (8 margin + 96 column + 16): pills and highlight bars start here, so the FIND pill, the selected row, the divider, the list and COPY share one left edge. **Text line, 12 px further in (x = 132):** all text starts here (FIND, record codes, the preview label, title and body). Widgets inset their text by the theme's 4 px inner padding, so a text widget sits at pill line + 8. The right edge is 12 px from the window edge (x = 508) for the search field, list and divider. `TestMainWindowTwoLines` checks the layout and the rendered pixels.
+- **Centering:** Antonio's capitals sit about 2 px below the middle of their line box, so text centered in a bar is lifted by `inkLift` (2 px). Measured from renders, ink is within 1 px of the center of its pill or bar.
+- **Dialogs, the editor, the recovery window and menus** get the palette and the pill buttons through the theme (a large button radius, Antonio bold labels) and keep their layouts; there are no elbows there. They stay on the 4 px grid with the older two lines, measured from their own edges (box line 12 px, text line 16 px; `onDialogGrid`).
+- **Not ours to align:** the menu bar (`File  Edit  Help`) is window chrome drawn by Fyne with its own padding.
+- **Hover and focus:** a translucent white veil (`#FFFFFF` at 11% and 22%) blended over the pill, so it shows on every pill color. The list's own hover fill is a pill too (the app theme's selection radius is 12).
 
 ### Selection rules
 
@@ -180,7 +176,7 @@ Sniper could not open your snippet library.     (bold)
 <Err text>
 Your data has not been changed.                 ← directly under the error it qualifies
 
-[ Restore backup                              ]  ← primary (ember)
+[ Restore backup                              ]  ← primary (orange)
 [ Move damaged file aside and start empty     ]
 [ Open data folder     ]  [ Quit              ]  ← equal halves, 8 px apart
 ```

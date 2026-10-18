@@ -74,7 +74,7 @@ pwsh -NoProfile -File scripts/package.ps1         # builds dist\Sniper.exe only 
 
 Or install it straight from GitHub (still needs gcc): `go install github.com/tinkthemaker/sniper/cmd/sniper@latest`.
 
-`package.ps1` installs the `fyne` packaging tool if it is missing. To look at the UI without a display, run `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens` and open the PNGs in `internal/ui/testdata/screens/`.
+`package.ps1` installs the `fyne` packaging tool if it is missing. To look at the UI without a display, run `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens` and open the PNGs in `internal/ui/testdata/screens/`. They show the LCARS-style window described in [the UI spec](docs/05-ui-spec.md); the design reference it was built from is [docs/design/lcars-mockup-v3.png](docs/design/lcars-mockup-v3.png).
 
 ## Documents
 
@@ -93,4 +93,4 @@ Direct insertion, sync, templates, tray, and global hotkeys are outside the MVP.
 
 ## License
 
-[MIT](LICENSE). The bundled UI font, [Jost](https://github.com/indestructible-type/Jost) by The Jost Project Authors, is under the [SIL Open Font License 1.1](internal/ui/fonts/OFL.txt).
+[MIT](LICENSE). The bundled UI fonts are under the [SIL Open Font License 1.1](internal/ui/fonts/OFL.txt): [Jost](https://github.com/indestructible-type/Jost) by The Jost Project Authors, for running text, and [Antonio](https://github.com/googlefonts/antonioFont) by The Antonio Project Authors, for titles, labels and buttons ([license](internal/ui/fonts/OFL-Antonio.txt)).

@@ -122,30 +122,34 @@ Undo (D27; `undo_test.go`). Ctrl+Z is delivered as `&fyne.ShortcutUndo{}` to the
 - Inside the editor, Ctrl+Z is the entry's text undo and the library and stack do not change. While any dialog is open, Ctrl+Z and the menu item do nothing.
 - The Edit menu sits between File and Help with one item, **Undo**, disabled while the stack is empty and enabled after a change.
 
-Theme and chrome (added with the Slayer finish; see the UI spec's Visual design section):
+Theme and chrome (the LCARS finish, D28; see the UI spec's Visual design section):
 
-15. `TestThemeContrastFloors`: every text color is at least 4.5:1 on each surface it can land on, and on both filled buttons.
-16. `TestThemeIsAlwaysDark` and `TestThemeUsesEmbeddedJost`: the theme ignores the OS variant; each text style gets the right embedded Jost file (Medium, Medium Italic, Semi, Semi Italic), the files are real TrueType fonts, and symbol and monospace text keep Fyne's fonts.
-17. `TestHeaderCountFollowsTheQuery` and `TestRowShowsSelectionBar`: the header count and the selection bar follow the query and the selection.
+15. `TestThemeContrastFloors`: every text color is at least 4.5:1 on each surface it can land on, and black is at least 4.5:1 on every block color, plain, hovered and focused.
+16. `TestThemeIsAlwaysDark`, `TestThemeMapsBoldToAntonioAndTextToJost` and `TestThemeButtonsArePills`: the theme ignores the OS variant; bold maps to Antonio SemiBold and regular, italic and bold italic to the Jost files, the embedded files are real TrueType fonts, symbol and monospace text keep Fyne's fonts; button radius is large and text on an orange button is black.
+17. `TestHeaderCountFollowsTheQuery`, `TestRowShowsSelectionPill` and `TestColumnCountFollowsTheQueryRules`: the count (the first block of the left column) and the selected row's orange pill follow the query and the selection; a spaces-only query counts as no query; the four blocks are 4 px apart with their labels.
 18. Editor Tab order is Title → Body → Cancel → Save, and Shift+Tab reverses it. Walk `Canvas().FocusNext()` and `FocusPrevious()`, which is what the real driver calls for Tab. Focusing fields directly would hide an order bug (D20).
 
 Rows, double-click and the Copy button (D23). Fixtures live in `internal/ui/testdata/fixtures/`: `duplicates.json` (three snippets titled `Greeting`) and `long-titles.json` (200 runes, CJK, an emoji ZWJ sequence, RTL), loaded with `store.DecodeImport` and `snippets.Append`; the 12-item `testdata/sample-import.json` corpus is reused, and a 300-snippet library is generated in the test (`bigLibrary`). The tests tap the real row objects with `test.Tap`:
 
-19. Rows hold only a bar and a title, truncated with an ellipsis.
+19. Rows hold a pill, a record code and a title, truncated with an ellipsis, and are as wide as the panel (388 px in a 520 px window).
 20. Double-click on an unselected row selects it, copies its body, and sets the status. A single click selects without copying; two slow clicks, or clicks on different rows, are not a double-click.
 21. After filtering, a double-click copies the row that was clicked.
 22. In the 300-snippet library, after scrolling, a double-click copies the right snippet and leaves its row fully visible.
 23. Double-click does nothing while the editor or a confirmation is open.
 24. With duplicate titles, selecting each shows its own body in the preview and a double-click copies the right one.
 25. Every row is `rowHeight` tall, and consecutive rows are `rowHeight` apart, over the corpus, long-titles, duplicates and large libraries.
-26. The Copy button is at least 112×40 with 16 px text, taller than New, Edit and Delete, starts at x = 12, with the others 8 px apart and centered on it.
-27. In a 520×600 window the search box, list and Copy start at x = 12, the search box and list end at width − 12, and the header and key strips span the full width.
+26. `TestCopyButtonIsAPill`: Copy is at least 112×40, starts on the pill line (x = 120), is rounded on its left end only (Delete on its right end only), is taller than New, Edit and Delete, which are 4 px apart and centered on it; the labels are capitals. `TestPillsShowEnabledAndDisabled`: a disabled pill's fill is clearly different from its enabled color.
+27. `TestMainWindowTwoLines`: in a 520×600 window the FIND pill, the selected row, the divider, the list and Copy start on the pill line (x = 120) and the text widgets put their text on the text line (x = 132), in layout and in the rendered pixels; the field, list and divider end at x = 508. `TestListShareOfThePanel`: the list takes about 55% of the room, sits 14 px above the divider, and no split container remains.
+28. `TestRecordCodesAreStablePerID`: a code is `NN-NNNN` and the same for a given ID however the list is filtered or ordered, and each row and the preview label show the code of their own snippet. `TestPreviewLabelNamesTheRecord`: the label reads `PREVIEW · RECORD <code>`, or just `PREVIEW` with no selection.
+29. `TestCapitalsAreDisplayOnly`: rows and the preview title are drawn in capitals, while `Library()` titles, search (either case) and the saved file keep the title as typed.
+30. `TestStatusReadoutShowsStatusMessages`: status messages appear in the bottom readout, which is the widest segment of the bar, ellipsizes a long message, and sits beside the `CTRL+N NEW` and `CTRL+Z UNDO` hints.
+31. `TestVersionBlockShowsVDEVInTests`: the version block reads `VDEV` under the test app, and `versionText` capitalizes real versions.
 
 ### Visual review (screenshots without a display)
 
 `TestScreens` renders key states with the software test driver and writes PNGs to `internal/ui/testdata/screens/` (git-ignored), but only when `SNIPER_SCREENS=1` is set. The states are: empty library, populated list with a selection, no matches, the editor with a validation error, the delete confirmation, the recovery window (with and without a backup), About, the import confirmation, and three screens from the Unicode corpus (emoji, CJK, right-to-left) to check font fallback under Jost, duplicate titles, long titles, and the 300-snippet library scrolled with a selection. Measure alignment from the PNGs instead of judging by eye: print, per horizontal band, the first and last non-background column (boxes start at 12, text at 16). Use `w.Resize(fyne.NewSize(520, 600))`, then `img := w.Canvas().Capture()`, then `png.Encode`.
 
-After M4, M5, and M6, the agent runs `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens` and **opens the PNGs** (an image-capable Read tool works) to check the layout against the UI spec: nothing clipped, empty states centered, buttons enabled or disabled correctly. Fix anything wrong before the exit check. These screenshots are for review, not golden-image assertions, because font rendering differs between machines.
+After M4, M5, and M6, the agent runs `SNIPER_SCREENS=1 go test ./internal/ui -run TestScreens` and **opens the PNGs** (an image-capable Read tool works) to check the layout against the UI spec: nothing clipped, empty states centered, buttons enabled or disabled correctly. Fix anything wrong before the exit check. Measure alignment from the render with a throwaway pixel-edge program (find the first orange pixel of each pill, the first ink pixel of each text), not by eye; it is not committed. These screenshots are for review, not golden-image assertions, because font rendering differs between machines.
 
 ## `cmd/clipcheck` (Windows clipboard check)
 
