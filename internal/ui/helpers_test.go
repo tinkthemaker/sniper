@@ -192,3 +192,6 @@ func (h *harness) primaryBytes() string {
 	}
 	return string(b)
 }
+
+// up is how the main window displays a title: in capitals, and only for display.
+func up(s string) string { return strings.ToUpper(s) }

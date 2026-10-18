@@ -148,11 +148,11 @@ func TestPreviewFollowsSelection(t *testing.T) {
 	if !h.m.previewBody.Selectable || h.m.previewBody.Wrapping != fyne.TextWrapWord {
 		t.Error("the preview body must be selectable and word-wrapped")
 	}
-	if h.m.previewTitle.Text != "Address" || h.m.previewBody.Text != "1 Main St\nSpringfield" {
+	if h.m.previewTitle.Text != up("Address") || h.m.previewBody.Text != "1 Main St\nSpringfield" {
 		t.Errorf("preview = %q / %q", h.m.previewTitle.Text, h.m.previewBody.Text)
 	}
 	h.key(fyne.KeyDown)
-	if h.m.previewTitle.Text != "Greeting" || h.m.previewBody.Text != "Hello,\nThanks for reaching out." {
+	if h.m.previewTitle.Text != up("Greeting") || h.m.previewBody.Text != "Hello,\nThanks for reaching out." {
 		t.Errorf("preview after Down = %q / %q", h.m.previewTitle.Text, h.m.previewBody.Text)
 	}
 	h.typeText("zzz")

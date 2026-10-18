@@ -35,58 +35,66 @@ func blend(under, over color.Color) color.Color {
 }
 
 // TestThemeContrastFloors keeps every text color readable on every surface it
-// can land on. Blood red is deliberately absent: it never carries small text.
+// can land on: 4.5:1 or better.
 func TestThemeContrastFloors(t *testing.T) {
 	surfaces := map[string]color.Color{
-		"canvas": ironCanvas, "panel": ironPanel, "surface": ironSurface,
-		"selection": ironSelect,
+		"canvas": colCanvas, "dialog": colSurface, "raised button": colRaised,
+		"selected text": colSelect,
 		// Hover is translucent, so test what it actually produces.
-		"hovered row": blend(ironCanvas, ironHover),
+		"hovered canvas":        blend(colCanvas, colHover),
+		"hovered raised button": blend(colRaised, colHover),
 	}
-	text := map[string]color.Color{"bright": textBright, "mid": textMid, "dim": textDim, "red text": redText, "ember": ember}
-	// Red text only appears on the flat surfaces (error labels, key chips), never
-	// on the selection or hover fills.
-	redSurfaces := map[string]bool{"canvas": true, "panel": true, "surface": true}
+	text := map[string]color.Color{
+		"ink": colInk, "tan": colTan, "dim": colDim, "orange": colOrange,
+		"lavender": colLavender, "periwinkle": colPeri, "red": colRed, "gold": colGold,
+	}
+	// Colored text is for the canvas and dialogs; on a selection or a button it
+	// is only the warm white and tan that appear.
+	flat := map[string]bool{"canvas": true, "dialog": true, "hovered canvas": true}
+	always := map[string]bool{"ink": true, "tan": true}
 	for sn, s := range surfaces {
 		for tn, c := range text {
-			if tn == "red text" && !redSurfaces[sn] {
+			if !flat[sn] && !always[tn] {
 				continue
+			}
+			if tn == "dim" && sn != "canvas" && sn != "dialog" {
+				continue // placeholders sit on inputs, which are the canvas
 			}
 			if got := contrast(c, s); got < 4.5 {
 				t.Errorf("%s on %s = %.2f:1, want at least 4.5:1", tn, sn, got)
 			}
 		}
 	}
-	// Secondary button labels are always the bright foreground, at rest and hovered.
-	for name, bg := range map[string]color.Color{"button": ironRaised, "hovered button": blend(ironRaised, ironHover)} {
-		if got := contrast(textBright, bg); got < 4.5 {
-			t.Errorf("bright on %s = %.2f:1, want at least 4.5:1", name, got)
+	// Black text on every block color, and on those colors under the hover and
+	// focus veils.
+	blocks := map[string]color.Color{
+		"orange": colOrange, "peach": colPeach, "gold": colGold, "tan": colTan,
+		"lavender": colLavender, "periwinkle": colPeri, "red": colRed,
+	}
+	for n, bg := range blocks {
+		for veil, v := range map[string]color.Color{"": color.Transparent, " hovered": colHover, " focused": colFocus} {
+			if got := contrast(colCanvas, blend(bg, v)); got < 4.5 {
+				t.Errorf("black on the%s %s block = %.2f:1, want at least 4.5:1", veil, n, got)
+			}
 		}
-	}
-	// Text on the two filled buttons.
-	if got := contrast(ironCanvas, ember); got < 4.5 {
-		t.Errorf("text on the ember button = %.2f:1", got)
-	}
-	if got := contrast(ironCanvas, redText); got < 4.5 {
-		t.Errorf("text on the danger button = %.2f:1", got)
 	}
 }
 
 func TestThemeIsAlwaysDark(t *testing.T) {
 	th := NewTheme()
 	for _, v := range []fyne.ThemeVariant{theme.VariantDark, theme.VariantLight} {
-		if got := th.Color(theme.ColorNameBackground, v); got != ironCanvas {
-			t.Errorf("variant %v background = %v, want iron canvas", v, got)
+		if got := th.Color(theme.ColorNameBackground, v); got != colCanvas {
+			t.Errorf("variant %v background = %v, want the black canvas", v, got)
 		}
 	}
 }
 
-func TestThemeUsesEmbeddedJost(t *testing.T) {
+func TestThemeMapsBoldToAntonioAndTextToJost(t *testing.T) {
 	th := NewTheme()
 	for style, want := range map[fyne.TextStyle]string{
 		{}:                         "Jost-500-Medium.ttf",
 		{Italic: true}:             "Jost-500-MediumItalic.ttf",
-		{Bold: true}:               "Jost-600-Semi.ttf",
+		{Bold: true}:               "Antonio-SemiBold.ttf",
 		{Bold: true, Italic: true}: "Jost-600-SemiItalic.ttf",
 	} {
 		if got := th.Font(style).Name(); got != want {
@@ -105,5 +113,15 @@ func TestThemeUsesEmbeddedJost(t *testing.T) {
 		if c := r.Content(); len(c) < 1024 || string(c[:4]) != "\x00\x01\x00\x00" {
 			t.Errorf("%s is not a TrueType font (%d bytes)", r.Name(), len(c))
 		}
+	}
+}
+
+func TestThemeButtonsArePills(t *testing.T) {
+	th := NewTheme()
+	if got := th.Size(theme.SizeNameButtonRadius); got < 30 {
+		t.Errorf("button radius = %v, want one large enough to round a button into a pill", got)
+	}
+	if got := th.Color(theme.ColorNameForegroundOnPrimary, theme.VariantDark); got != colCanvas {
+		t.Errorf("text on an orange button = %v, want black", got)
 	}
 }

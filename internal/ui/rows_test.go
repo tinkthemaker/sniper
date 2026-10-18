@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/test"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -149,18 +150,18 @@ func TestRowsShowOnlyATruncatedTitle(t *testing.T) {
 	}
 	for _, r := range rows {
 		kids := r.row.content.(*fyne.Container).Objects
-		if len(kids) != 2 {
-			t.Errorf("row has %d parts, want the bar and the title", len(kids))
+		if len(kids) != 3 {
+			t.Errorf("row has %d parts, want the pill, the code and the title", len(kids))
 		}
-		title := h.m.rows[r.row].title
+		title := h.m.rows[r.row].titleText
 		if title.Truncation != fyne.TextTruncateEllipsis {
 			t.Errorf("title truncation = %v, want ellipsis", title.Truncation)
 		}
 		if title.MinSize().Width > 100 {
-			t.Errorf("title %q cannot shrink to the row: min %v", title.Text, title.MinSize())
+			t.Errorf("title %q cannot shrink to the row: min %v", title.String(), title.MinSize())
 		}
-		if got := r.row.Size().Width; got != 496 {
-			t.Errorf("row width = %v, want 496", got)
+		if got := r.row.Size().Width; got != 388 {
+			t.Errorf("row width = %v, want 388", got)
 		}
 	}
 }
@@ -181,7 +182,7 @@ func TestDoubleClickSelectsAndCopies(t *testing.T) {
 	if want := copiedStatus("Sign-off"); h.m.Status() != want {
 		t.Errorf("status = %q, want %q", h.m.Status(), want)
 	}
-	if h.m.previewTitle.Text != "Sign-off" {
+	if h.m.previewTitle.Text != up("Sign-off") {
 		t.Errorf("preview shows %q", h.m.previewTitle.Text)
 	}
 }
@@ -283,7 +284,7 @@ func TestDuplicateTitlesStayDistinct(t *testing.T) {
 		id := h.idOfTitle("Greeting", n)
 		ids[id] = true
 		h.click(id)
-		if h.m.previewBody.Text != h.body(id) || h.m.previewTitle.Text != "Greeting" {
+		if h.m.previewBody.Text != h.body(id) || h.m.previewTitle.Text != up("Greeting") {
 			t.Errorf("preview of Greeting #%d shows %q", n, h.m.previewBody.Text)
 		}
 	}
@@ -330,7 +331,17 @@ func TestEveryRowHasThePitchHeight(t *testing.T) {
 	}
 }
 
-func TestCopyButtonIsChunky(t *testing.T) {
+// The main window has two vertical lines (lcars.go): pills and highlight bars
+// start on the pill line, and all text starts textInset further in. The numbers
+// are checked against rendered pixels, not just layout, by the measurements in
+// docs/07-decision-log.md (D28).
+const (
+	wantPillLine = 120 // frameMargin + columnWidth + 16
+	wantTextLine = 132 // pillLine + textInset
+	wantRight    = 508 // 520 - 12
+)
+
+func TestCopyButtonIsAPill(t *testing.T) {
 	h := newHarness(t, sampleLibrary())
 	h.m.win.Resize(fyne.NewSize(520, 600))
 	m := h.m
@@ -338,61 +349,160 @@ func TestCopyButtonIsChunky(t *testing.T) {
 	if cs.Width < 112 || cs.Height < 40 {
 		t.Errorf("Copy is %v, want at least 112×40", cs)
 	}
+	if x := absPos(m.copyBtn).X; x != wantPillLine {
+		t.Errorf("Copy starts at x = %v, want the pill line, %v", x, float32(wantPillLine))
+	}
+	if x := absPos(m.pills[0].fill).X; x != wantPillLine {
+		t.Errorf("Copy's fill starts at x = %v, want the pill line", x)
+	}
 	for _, b := range []*widget.Button{m.newBtn, m.editBtn, m.deleteBtn} {
 		if b.Size().Height >= cs.Height {
 			t.Errorf("%q (%v) is not smaller than Copy (%v)", b.Text, b.Size(), cs)
 		}
 	}
-	if got := m.copyBtn.Theme().Size(theme.SizeNameText); got != 16 {
-		t.Errorf("Copy text size = %v, want 16", got)
+	if got := m.copyBtn.Theme().Size(theme.SizeNameText); got != 20 {
+		t.Errorf("Copy text size = %v, want 20", got)
 	}
-	if got := m.newBtn.Theme().Size(theme.SizeNameText); got != 14 {
-		t.Errorf("New text size = %v, want 14", got)
+	if got := m.newBtn.Theme().Size(theme.SizeNameText); got != 15 {
+		t.Errorf("New text size = %v, want 15", got)
 	}
-	if x := absPos(m.copyBtn).X; x != 12 {
-		t.Errorf("Copy starts at x = %v, want 12", x)
-	}
-	prev := fyne.CanvasObject(m.copyBtn)
-	cy := absPos(m.copyBtn).Y + cs.Height/2
-	for _, b := range []*widget.Button{m.newBtn, m.editBtn, m.deleteBtn} {
-		if gap := absPos(b).X - (absPos(prev).X + prev.Size().Width); gap != 8 {
-			t.Errorf("gap before %q = %v, want 8", b.Text, gap)
+	prev, cy := m.pills[0].fill, absPos(m.pills[0].fill).Y+m.pills[0].fill.Size().Height/2
+	for _, p := range m.pills[1:] {
+		if gap := absPos(p.fill).X - (absPos(prev).X + prev.Size().Width); gap != 4 {
+			t.Errorf("gap before %q = %v, want 4", p.btn.Text, gap)
 		}
-		if mid := absPos(b).Y + b.Size().Height/2; mid < cy-0.5 || mid > cy+0.5 {
-			t.Errorf("%q is centered at y = %v, Copy at %v", b.Text, mid, cy)
+		if mid := absPos(p.fill).Y + p.fill.Size().Height/2; mid < cy-0.5 || mid > cy+0.5 {
+			t.Errorf("%q is centered at y = %v, Copy at %v", p.btn.Text, mid, cy)
 		}
-		prev = b
+		prev = p.fill
 	}
-	if mid := absPos(m.status).Y + m.status.Size().Height/2; mid < cy-0.5 || mid > cy+0.5 {
-		t.Errorf("status is centered at y = %v, Copy at %v", mid, cy)
+	// COPY is rounded on its left end only, DELETE on its right end only.
+	c, d := m.pills[0].fill, m.pills[3].fill
+	if c.TopLeftCornerRadius == 0 || c.BottomLeftCornerRadius == 0 || c.TopRightCornerRadius != 0 || c.BottomRightCornerRadius != 0 {
+		t.Errorf("Copy corners are wrong: %+v", c)
 	}
-	// The Copy row sits 12 px above the key strip (less the 1 px rule above it).
-	if below := absPos(m.keyStrip).Y - (absPos(m.copyBtn).Y + cs.Height); below != 12 {
-		t.Errorf("space between Copy and the key strip = %v, want 12", below)
+	if d.TopRightCornerRadius == 0 || d.BottomRightCornerRadius == 0 || d.TopLeftCornerRadius != 0 || d.BottomLeftCornerRadius != 0 {
+		t.Errorf("Delete corners are wrong: %+v", d)
+	}
+	for i, want := range []string{"COPY", "NEW", "EDIT", "DELETE"} {
+		if m.pills[i].btn.Text != want {
+			t.Errorf("button %d reads %q, want %q", i, m.pills[i].btn.Text, want)
+		}
 	}
 }
 
-func TestMainWindowGrid(t *testing.T) {
+func TestPillsShowEnabledAndDisabled(t *testing.T) {
+	h := newHarness(t, snippets.NewLibrary())
+	for i, name := range []string{"Copy", "New", "Edit", "Delete"} {
+		p := h.m.pills[i]
+		off := i != 1 // with an empty library, New is the only enabled button
+		if p.btn.Disabled() != off {
+			t.Fatalf("%s disabled = %v", name, p.btn.Disabled())
+		}
+		if off && p.fill.FillColor == p.c {
+			t.Errorf("%s is disabled but still wears its full color", name)
+		}
+		if !off && p.fill.FillColor != p.c {
+			t.Errorf("%s is enabled but dimmed", name)
+		}
+		if off && contrast(p.fill.FillColor, p.c) < 3 {
+			t.Errorf("%s disabled (%v) is too close to enabled (%v)", name, p.fill.FillColor, p.c)
+		}
+	}
+	h2 := newHarness(t, sampleLibrary())
+	for i, p := range h2.m.pills {
+		if p.btn.Disabled() || p.fill.FillColor != p.c {
+			t.Errorf("pill %d should be enabled and in color with a selection", i)
+		}
+	}
+}
+
+func TestMainWindowTwoLines(t *testing.T) {
 	h := newHarness(t, sampleLibrary())
 	h.m.win.Resize(fyne.NewSize(520, 600))
 	m := h.m
-	w := m.win.Canvas().Size().Width
-	if w != 520 {
+	if w := m.win.Canvas().Size().Width; w != 520 {
 		t.Fatalf("canvas width = %v", w)
 	}
-	for name, o := range map[string]fyne.CanvasObject{"search box": m.search, "list": m.list, "Copy": m.copyBtn} {
-		if x := absPos(o).X; x != 12 {
-			t.Errorf("%s starts at x = %v, want 12", name, x)
+	rows := h.shownRows()
+	sel := h.mustRow(m.SelectedID())
+	pills := map[string]fyne.CanvasObject{
+		"FIND pill": m.parts.findPill, "selected row": m.rows[sel.row].pill,
+		"divider": m.parts.divider[0], "Copy": m.copyBtn, "list": m.list,
+	}
+	for name, o := range pills {
+		if x := absPos(o).X; x != wantPillLine {
+			t.Errorf("%s starts at x = %v, want the pill line, %v", name, x, float32(wantPillLine))
 		}
 	}
-	for name, o := range map[string]fyne.CanvasObject{"search box": m.search, "list": m.list} {
-		if end := absPos(o).X + o.Size().Width; end != w-12 {
-			t.Errorf("%s ends at x = %v, want %v", name, end, w-12)
+	// Text widgets inset their text by 4, so a text widget sits 4 px before the text line.
+	texts := map[string]fyne.CanvasObject{
+		"FIND": m.parts.findText, "preview label": m.previewLabel, "preview title": m.previewTitle,
+		"preview body": m.previewBody, "record code": m.rows[rows[0].row].codeText,
+	}
+	for name, o := range texts {
+		if x := absPos(o).X + textPad; x != wantTextLine {
+			t.Errorf("%s text starts at x = %v, want the text line, %v", name, x, float32(wantTextLine))
 		}
 	}
-	for name, o := range map[string]fyne.CanvasObject{"header strip": m.headerStrip, "key strip": m.keyStrip} {
-		if x, end := absPos(o).X, absPos(o).X+o.Size().Width; x != 0 || end != w {
-			t.Errorf("%s spans %v..%v, want 0..%v", name, x, end, w)
+	for name, o := range map[string]fyne.CanvasObject{"list": m.list, "divider": m.parts.divider[4], "buttons": m.parts.buttons, "search outline": m.parts.outline} {
+		if end := absPos(o).X + o.Size().Width; end != wantRight && name != "buttons" {
+			t.Errorf("%s ends at x = %v, want %v", name, end, wantRight)
 		}
+	}
+	// The pill line is the same in the render: the first orange pixel of the
+	// FIND pill, the selected row and COPY.
+	img := m.win.Canvas().Capture()
+	isOrange := func(x, y int) bool {
+		r, g, b, _ := img.At(x, y).RGBA()
+		return r>>8 > 0xF0 && g>>8 > 0x8C && g>>8 < 0xA5 && b>>8 < 0x14 // orange, give or take antialiasing
+	}
+	// A rounded end only reaches the line at its widest point, so look at a few
+	// rows around the middle and take the leftmost.
+	firstOrange := func(mid int) int {
+		for x := 106; x < 300; x++ {
+			for y := mid - 4; y <= mid+4; y++ {
+				if isOrange(x, y) {
+					return x
+				}
+			}
+		}
+		return -1
+	}
+	for name, y := range map[string]float32{
+		"FIND pill":    absPos(m.parts.findPill).Y + searchHeight/2,
+		"selected row": sel.pos.Y + rowHeight/2,
+		"Copy":         absPos(m.pills[0].fill).Y + copyHeight/2,
+	} {
+		if x := firstOrange(int(y)); x != wantPillLine {
+			t.Errorf("rendered %s starts at x = %d, want %d", name, x, wantPillLine)
+		}
+	}
+}
+
+func TestListShareOfThePanel(t *testing.T) {
+	h := newHarness(t, sampleLibrary())
+	h.m.win.Resize(fyne.NewSize(520, 600))
+	m := h.m
+	listBottom := absPos(m.list).Y + m.list.Size().Height
+	divTop := absPos(m.parts.divider[0]).Y
+	divBottom := divTop + m.parts.divider[0].Size().Height
+	previewBottom := absPos(m.parts.buttons).Y - 10
+	listH, previewH := m.list.Size().Height, previewBottom-divBottom-10
+	if share := listH / (listH + previewH); share < 0.53 || share > 0.57 {
+		t.Errorf("list share = %.3f (list %v, preview %v), want about 0.55", share, listH, previewH)
+	}
+	if divTop-listBottom != 14 {
+		t.Errorf("list to divider = %v, want 14", divTop-listBottom)
+	}
+	// The divider is fixed: it has no handle to drag.
+	var split int
+	walk(m.win.Content(), func(o fyne.CanvasObject) {
+		if _, ok := o.(*container.Split); ok {
+			split++
+		}
+	})
+	if split != 0 {
+		t.Errorf("found %d split containers; the divider is a fixed bar", split)
 	}
 }

@@ -136,7 +136,7 @@ func TestImportingTheSameFileTwiceCreatesDistinctDuplicates(t *testing.T) {
 	// All six rows read "Greeting"; the preview tells them apart.
 	seen := map[string]bool{}
 	for i := 0; i < 6; i++ {
-		if h.m.previewTitle.Text != "Greeting" {
+		if h.m.previewTitle.Text != up("Greeting") {
 			t.Fatalf("row %d title %q", i, h.m.previewTitle.Text)
 		}
 		seen[h.m.previewBody.Text] = true
@@ -183,7 +183,7 @@ func TestImportAcceptsATitleOf200RunesAndShowsItWhole(t *testing.T) {
 		t.Error("the 200-rune title was not saved whole")
 	}
 	h.typeText("éééé") // matches the title only
-	if h.selectedTitle() != long || h.m.previewTitle.Text != long {
+	if h.selectedTitle() != long || h.m.previewTitle.Text != up(long) {
 		t.Errorf("selected %q", h.selectedTitle())
 	}
 }

@@ -8,123 +8,149 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-// Slayer finish: blood red on black iron, with ember as the hot end. The values
-// are derived the same way as in the Screech tool (warm grays pulled toward the
-// accent hue). Blood red is only 3.3:1 on the canvas, so it never colors small
-// text; text that needs red uses redText, and the action color is ember.
+// The palette is the one in docs/design/lcars-mockup-v3.html: a black canvas,
+// seven pastel block colors, and text in tan or a warm white. Text that sits on
+// a colored block is always black; TestThemeContrastFloors keeps every pairing
+// at 4.5:1 or better.
 var (
-	ironCanvas  = rgb(0x0A, 0x0A, 0x0A) // window background
-	ironPanel   = rgb(0x10, 0x09, 0x08) // inputs, menus, dialogs
-	ironSurface = rgb(0x21, 0x12, 0x11) // strips and dialogs
-	ironRaised  = rgb(0x2E, 0x18, 0x16) // buttons: one step above the surface, so they show on dialogs too
-	ironSelect  = rgb(0x35, 0x1A, 0x19) // selected row
-	// Hover is a translucent veil blended over whatever it covers (Fyne blends
-	// it onto buttons), so it lightens rows and buttons alike and stays weaker
-	// than the selection.
-	ironHover = color.NRGBA{R: 0xF5, G: 0xEA, B: 0xEA, A: 0x10}
-	ironEdge  = rgb(0x51, 0x0A, 0x09) // metal edge: borders and rules
-	ironRule  = rgb(0x3A, 0x13, 0x11) // quiet separators
-
-	textBright = rgb(0xF5, 0xEA, 0xEA)
-	textMid    = rgb(0xC0, 0xAE, 0xAC)
-	textDim    = rgb(0xA3, 0x8A, 0x89)
-
-	bloodRed = rgb(0xC2, 0x1A, 0x16) // structure: bars, edges (never small text)
-	redText  = rgb(0xE8, 0x43, 0x3C) // red that must be read: errors, danger fills
-	ember    = rgb(0xFF, 0x6A, 0x18) // action and focus
+	colCanvas   = rgb(0x00, 0x00, 0x00) // window background, inputs, menus
+	colSurface  = rgb(0x1B, 0x15, 0x1B) // dialogs: one step above the canvas so they stand off it
+	colRaised   = rgb(0x33, 0x27, 0x36) // quiet buttons on dialogs
+	colSelect   = rgb(0x5B, 0x4A, 0x6B) // selected text in an entry
+	colHover    = color.NRGBA{R: 0xFF, G: 0xFF, B: 0xFF, A: 0x1C}
+	colFocus    = color.NRGBA{R: 0xFF, G: 0xFF, B: 0xFF, A: 0x38}
+	colScroll   = color.NRGBA{R: 0xFF, G: 0x99, B: 0x66, A: 0x99}
+	colOrange   = rgb(0xFF, 0x99, 0x00) // action and focus
+	colPeach    = rgb(0xFF, 0x99, 0x66) // frame
+	colGold     = rgb(0xFF, 0xCC, 0x66)
+	colTan      = rgb(0xFF, 0xCC, 0x99) // list text
+	colLavender = rgb(0xCC, 0x99, 0xCC)
+	colPeri     = rgb(0x99, 0x99, 0xFF)
+	colRed      = rgb(0xCC, 0x66, 0x66)
+	colInk      = rgb(0xF1, 0xE3, 0xD3) // running text
+	colDim      = rgb(0x9A, 0x8A, 0x9A) // placeholders
+	colOff      = rgb(0x7A, 0x6B, 0x7A) // disabled text
 )
 
 func rgb(r, g, b uint8) color.Color { return color.NRGBA{R: r, G: g, B: b, A: 0xFF} }
 
-// slayerTheme is always dark: the finish is black iron, whatever the OS setting.
-type slayerTheme struct {
+// Theme color and size names the main window's custom text uses. They exist so
+// a RichText segment can pick a palette color or a size by name.
+const (
+	nameBlack    fyne.ThemeColorName = "sniperBlack"
+	nameOrange   fyne.ThemeColorName = "sniperOrange"
+	nameTan      fyne.ThemeColorName = "sniperTan"
+	nameLavender fyne.ThemeColorName = "sniperLavender"
+	namePeri     fyne.ThemeColorName = "sniperPeri"
+
+	sizeRow   fyne.ThemeSizeName = "sniperRow"   // list titles
+	sizeCode  fyne.ThemeSizeName = "sniperCode"  // record codes, block labels, the FIND pill
+	sizeTitle fyne.ThemeSizeName = "sniperTitle" // the preview title
+	sizeBrand fyne.ThemeSizeName = "sniperBrand" // SNIPER in the top bar
+	sizeHint  fyne.ThemeSizeName = "sniperHint"  // the bottom bar
+)
+
+// lcarsTheme is always dark: the finish is black, whatever the OS setting.
+type lcarsTheme struct {
 	base fyne.Theme
 	font func(fyne.TextStyle) fyne.Resource
 }
 
-// NewTheme returns the Slayer theme, with the embedded Jost face for text.
+// NewTheme returns the LCARS-style theme, with the embedded Antonio and Jost faces.
 func NewTheme() fyne.Theme {
-	return &slayerTheme{base: theme.DefaultTheme(), font: jostFont}
+	return &lcarsTheme{base: theme.DefaultTheme(), font: lcarsFont}
 }
 
-func (t *slayerTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
+func (t *lcarsTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
 	switch name {
-	case theme.ColorNameBackground:
-		return ironCanvas
-	case theme.ColorNameForeground:
-		return textBright
-	case theme.ColorNameDisabled:
-		return rgb(0x6B, 0x5A, 0x59)
-	case theme.ColorNamePlaceHolder:
-		return textDim
-	case theme.ColorNamePrimary, theme.ColorNameHyperlink:
-		return ember
-	case theme.ColorNameForegroundOnPrimary, theme.ColorNameForegroundOnError,
+	case nameBlack, theme.ColorNameForegroundOnPrimary, theme.ColorNameForegroundOnError,
 		theme.ColorNameForegroundOnWarning, theme.ColorNameForegroundOnSuccess:
-		return ironCanvas
+		return colCanvas
+	case nameOrange:
+		return colOrange
+	case nameTan:
+		return colTan
+	case nameLavender:
+		return colLavender
+	case namePeri:
+		return colPeri
+	case theme.ColorNameBackground, theme.ColorNameInputBackground, theme.ColorNameMenuBackground:
+		return colCanvas
+	case theme.ColorNameForeground:
+		return colInk
+	case theme.ColorNameDisabled:
+		return colOff
+	case theme.ColorNamePlaceHolder:
+		return colDim
+	case theme.ColorNamePrimary, theme.ColorNameHyperlink, theme.ColorNameWarning, theme.ColorNameSuccess:
+		return colOrange
 	case theme.ColorNameButton:
-		return ironRaised
-	case theme.ColorNameHeaderBackground:
-		return ironSurface
-	case theme.ColorNameDisabledButton:
-		return rgb(0x14, 0x0D, 0x0C)
+		return colRaised
+	case theme.ColorNameDisabledButton, theme.ColorNameHeaderBackground:
+		return colSurface
 	case theme.ColorNameHover:
-		return ironHover
+		return colHover
 	case theme.ColorNamePressed, theme.ColorNameSelection:
-		return ironSelect
+		return colSelect
 	case theme.ColorNameFocus:
-		return color.NRGBA{R: 0xFF, G: 0x6A, B: 0x18, A: 0x66}
-	case theme.ColorNameInputBackground, theme.ColorNameMenuBackground:
-		return ironPanel
+		return colFocus
 	case theme.ColorNameOverlayBackground:
-		return ironSurface // dialogs sit one step above the window
-	case theme.ColorNameInputBorder:
-		return ironEdge
+		return colSurface
+	case theme.ColorNameInputBorder, theme.ColorNameScrollBar:
+		return colScroll
 	case theme.ColorNameSeparator:
-		return ironRule
-	case theme.ColorNameScrollBar:
-		return ironEdge
+		return colRaised
 	case theme.ColorNameScrollBarBackground:
 		return color.Transparent
 	case theme.ColorNameShadow:
 		return color.NRGBA{A: 0x66}
 	case theme.ColorNameError:
-		return redText
-	case theme.ColorNameWarning, theme.ColorNameSuccess:
-		return ember
+		return colRed
 	}
 	return t.base.Color(name, theme.VariantDark)
 }
 
-func (t *slayerTheme) Size(name fyne.ThemeSizeName) float32 {
+func (t *lcarsTheme) Size(name fyne.ThemeSizeName) float32 {
 	switch name {
 	case theme.SizeNameText:
 		return 14
 	case theme.SizeNameCaptionText:
 		return 12
+	case sizeRow:
+		return 17
+	case sizeCode:
+		return 13
+	case sizeTitle:
+		return 22
+	case sizeBrand:
+		return 34
+	case sizeHint:
+		return 12
 	case theme.SizeNamePadding:
 		return 4
 	case theme.SizeNameInnerPadding:
-		return 4 // widget text inset; boxLine + 4 = textLine (chrome.go)
+		return 4 // widget text inset; pillLine + 8 = textLine (chrome.go)
 	case theme.SizeNameInputBorder, theme.SizeNameSeparatorThickness:
 		return 1
-	case theme.SizeNameInputRadius, theme.SizeNameButtonRadius, theme.SizeNameSelectionRadius,
-		theme.SizeNameCardRadius, theme.SizeNamePopupRadius, theme.SizeNameMenuRadius,
-		theme.SizeNameDialogRadius:
-		return 2
+	case theme.SizeNameButtonRadius:
+		return 100 // clamped to half the height: a full pill
+	case theme.SizeNameInputRadius:
+		return 14 // a one-line field is a pill; a tall one stays a rounded box
+	case theme.SizeNameSelectionRadius:
+		return rowHeight / 2 // a list row's hover and selection fills are pills
+	case theme.SizeNameCardRadius, theme.SizeNamePopupRadius, theme.SizeNameMenuRadius, theme.SizeNameDialogRadius:
+		return 4
 	case theme.SizeNameScrollBar:
 		return 10
 	case theme.SizeNameScrollBarSmall:
 		return 4
 	case theme.SizeNameScrollBarRadius:
 		return 0
-	case theme.SizeNameSplitThickness:
-		return 1
 	}
 	return t.base.Size(name)
 }
 
-func (t *slayerTheme) Font(s fyne.TextStyle) fyne.Resource {
+func (t *lcarsTheme) Font(s fyne.TextStyle) fyne.Resource {
 	if t.font != nil {
 		if r := t.font(s); r != nil {
 			return r
@@ -133,24 +159,13 @@ func (t *slayerTheme) Font(s fyne.TextStyle) fyne.Resource {
 	return t.base.Font(s)
 }
 
-// dividerTheme colors a split's divider like the other rules: the bar in the
-// metal edge and its grip dim, instead of shadow and bright text. Wrap only the
-// split in it, and give each pane back the base theme with its own override.
-type dividerTheme struct{ fyne.Theme }
+func (t *lcarsTheme) Icon(name fyne.ThemeIconName) fyne.Resource { return t.base.Icon(name) }
 
-func (d dividerTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
-	switch name {
-	case theme.ColorNameShadow:
-		return ironEdge
-	case theme.ColorNameForeground:
-		return textDim
-	}
-	return d.Theme.Color(name, v)
-}
-
-// denseTheme removes the gap the list adds between its rows, so the row pitch
-// is the row height. It leaves the inner padding alone, because that is what
-// keeps row text on the text line. Wrap only the list in it.
+// denseTheme removes the gap the list adds between rows, so the row pitch is
+// the row height. It leaves the inner padding alone, because that is what keeps
+// row text where it is. Wrap only the list in it. (The list's own items ignore
+// a theme override, so their pill-shaped hover and selection fills come from
+// the app theme's selection radius instead.)
 type denseTheme struct{ fyne.Theme }
 
 func (d denseTheme) Size(name fyne.ThemeSizeName) float32 {
@@ -160,31 +175,100 @@ func (d denseTheme) Size(name fyne.ThemeSizeName) float32 {
 	return d.Theme.Size(name)
 }
 
-// bigTextTheme sets the text size for the primary button. Wrap only that button.
-type bigTextTheme struct{ fyne.Theme }
-
-func (b bigTextTheme) Size(name fyne.ThemeSizeName) float32 {
-	if name == theme.SizeNameText {
-		return copyTextSize
-	}
-	return b.Theme.Size(name)
+// pillTheme dresses one main-window button: black label, flat fill, a veil for
+// hover and focus, and the given text size. The colored fill is drawn behind
+// the button by pill(), so each end can be rounded on its own. The inner
+// padding is the gap between the label and the button's right end.
+type pillTheme struct {
+	fyne.Theme
+	text   float32
+	radius float32
 }
 
-func (t *slayerTheme) Icon(name fyne.ThemeIconName) fyne.Resource { return t.base.Icon(name) }
+func (p pillTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
+	switch name {
+	case theme.ColorNameForeground:
+		return colCanvas
+	case theme.ColorNameButton, theme.ColorNameDisabledButton:
+		return color.Transparent
+	}
+	return p.Theme.Color(name, v)
+}
 
-// The UI face is Jost, a free, Futura-spirited geometric sans (SIL Open Font
-// License; fonts/OFL.txt). It is embedded, so every PC renders the same.
-// Medium (500) is the text weight because the 400 Book weight is thin on the
-// dark canvas; Semi (600) carries emphasis, Futura's classic "Demi" weight.
+func (p pillTheme) Size(name fyne.ThemeSizeName) float32 {
+	switch name {
+	case theme.SizeNameText:
+		return p.text
+	case theme.SizeNameInnerPadding:
+		return pillPad
+	case theme.SizeNameButtonRadius:
+		return p.radius
+	}
+	return p.Theme.Size(name)
+}
+
+// searchTheme strips the search entry down to its text: the outline is drawn by
+// the frame (so the left end can be square), so the entry has no fill, border
+// or focus ring of its own.
+type searchTheme struct{ fyne.Theme }
+
+func (s searchTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
+	switch name {
+	case theme.ColorNameInputBackground:
+		return color.Transparent
+	case theme.ColorNameForeground:
+		return colTan
+	case theme.ColorNameScrollBar:
+		return color.Transparent // a one-line field never scrolls up or down
+	}
+	return s.Theme.Color(name, v)
+}
+
+func (s searchTheme) Size(name fyne.ThemeSizeName) float32 {
+	switch name {
+	case theme.SizeNameInputBorder:
+		return 0
+	case theme.SizeNameText:
+		return 16
+	}
+	return s.Theme.Size(name)
+}
+
+// labelTheme sets the text size and color of one label.
+type labelTheme struct {
+	fyne.Theme
+	text float32
+	fg   color.Color
+}
+
+func (s labelTheme) Color(name fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
+	if name == theme.ColorNameForeground && s.fg != nil {
+		return s.fg
+	}
+	return s.Theme.Color(name, v)
+}
+
+func (s labelTheme) Size(name fyne.ThemeSizeName) float32 {
+	if name == theme.SizeNameText {
+		return s.text
+	}
+	return s.Theme.Size(name)
+}
+
+// Two faces, both free under the SIL Open Font License (fonts/OFL.txt for
+// Jost, fonts/OFL-Antonio.txt for Antonio) and embedded so every PC renders the
+// same. Antonio, a tall condensed gothic, carries everything bold: titles,
+// labels, buttons and headings. Jost, a Futura-spirited geometric sans, carries
+// running text; Medium (500) because the 400 Book weight is thin on black.
 //
+//go:embed fonts/Antonio-SemiBold.ttf
+var antonioSemiBold []byte
+
 //go:embed fonts/Jost-500-Medium.ttf
 var jostMedium []byte
 
 //go:embed fonts/Jost-500-MediumItalic.ttf
 var jostMediumItalic []byte
-
-//go:embed fonts/Jost-600-Semi.ttf
-var jostSemi []byte
 
 //go:embed fonts/Jost-600-SemiItalic.ttf
 var jostSemiItalic []byte
@@ -192,13 +276,13 @@ var jostSemiItalic []byte
 var (
 	fontRegular    = fyne.NewStaticResource("Jost-500-Medium.ttf", jostMedium)
 	fontItalic     = fyne.NewStaticResource("Jost-500-MediumItalic.ttf", jostMediumItalic)
-	fontBold       = fyne.NewStaticResource("Jost-600-Semi.ttf", jostSemi)
+	fontBold       = fyne.NewStaticResource("Antonio-SemiBold.ttf", antonioSemiBold)
 	fontBoldItalic = fyne.NewStaticResource("Jost-600-SemiItalic.ttf", jostSemiItalic)
 )
 
-// jostFont picks the Jost file for a text style. Symbol and monospace text keep
+// lcarsFont picks the font file for a text style. Symbol and monospace text keep
 // Fyne's own fonts (nil means "use the base theme").
-func jostFont(s fyne.TextStyle) fyne.Resource {
+func lcarsFont(s fyne.TextStyle) fyne.Resource {
 	switch {
 	case s.Symbol, s.Monospace:
 		return nil

@@ -94,7 +94,7 @@ func TestTappingARowSelectsIt(t *testing.T) {
 	if h.selectedTitle() != "Sign-off" {
 		t.Errorf("selected %q after selecting row 2", h.selectedTitle())
 	}
-	if h.m.previewTitle.Text != "Sign-off" || h.m.previewBody.Text != "Best regards,\nTink" {
+	if h.m.previewTitle.Text != up("Sign-off") || h.m.previewBody.Text != "Best regards,\nTink" {
 		t.Errorf("preview = %q / %q", h.m.previewTitle.Text, h.m.previewBody.Text)
 	}
 }
@@ -207,21 +207,21 @@ func TestHeaderCountFollowsTheQuery(t *testing.T) {
 	}
 }
 
-func TestRowShowsSelectionBar(t *testing.T) {
+func TestRowShowsSelectionPill(t *testing.T) {
 	h := newHarness(t, sampleLibrary()) // first result (Address) is selected
 	barFor := func(i int) color.Color {
 		row := h.m.newRow()
 		h.m.updateRow(i, row)
-		return h.m.rows[row].bar.FillColor
+		return h.m.rows[row].pill.FillColor
 	}
-	if got := barFor(0); got != bloodRed {
-		t.Errorf("selected row bar = %v, want blood red", got)
+	if got := barFor(0); got != colOrange {
+		t.Errorf("selected row pill = %v, want orange", got)
 	}
 	if got := barFor(1); got != color.Color(color.Transparent) {
-		t.Errorf("unselected row bar = %v, want transparent", got)
+		t.Errorf("unselected row pill = %v, want transparent", got)
 	}
 	h.key(fyne.KeyDown)
-	if got := barFor(1); got != bloodRed {
-		t.Errorf("bar did not follow the selection: %v", got)
+	if got := barFor(1); got != colOrange {
+		t.Errorf("pill did not follow the selection: %v", got)
 	}
 }

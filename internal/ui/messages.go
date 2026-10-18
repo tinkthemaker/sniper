@@ -10,9 +10,6 @@ const (
 	appTitle          = "Sniper"
 	searchPlaceholder = "Search snippets (Ctrl+F)"
 
-	labelCopy   = "Copy"
-	labelNew    = "New"
-	labelEdit   = "Edit"
 	labelDelete = "Delete"
 	labelOK     = "OK"
 	labelQuit   = "Quit"
@@ -84,9 +81,18 @@ Editor
 	restoredStatus      = "Restored from backup."
 	startedEmptyStatus  = "Started with an empty library."
 
-	brandName    = "SNIPER"
-	brandSub     = "SNIPPETS"
-	previewLabel = "PREVIEW"
+	brandName        = "SNIPER"
+	previewLabel     = "PREVIEW"
+	searchBlockLabel = "SEARCH"
+	findLabel        = "FIND"
+	hintNewText      = "CTRL+N NEW"
+	hintUndoText     = "CTRL+Z UNDO"
+
+	// The main window's buttons are capitals, as on the frame around them.
+	btnCopy   = "COPY"
+	btnNew    = "NEW"
+	btnEdit   = "EDIT"
+	btnDelete = "DELETE"
 
 	emptyLibraryText    = "No snippets yet. Press Ctrl+N to create one."
 	previewEmptyText    = "Select a snippet to preview it."
@@ -97,6 +103,17 @@ Editor
 // unpunctuated returns err's text without a trailing period, so templates that
 // follow it with ". …" do not produce "..".
 func unpunctuated(err error) string { return strings.TrimSuffix(err.Error(), ".") }
+
+func previewRecordLabel(code string) string { return previewLabel + " · RECORD " + code }
+
+// versionText is the version block: V followed by the version in capitals, or
+// VDEV when the build has none.
+func versionText(version string) string {
+	if version == "" {
+		version = "dev"
+	}
+	return "V" + strings.ToUpper(version)
+}
 
 func countAllText(n int) string          { return fmt.Sprintf("%d IN LIBRARY", n) }
 func countMatchText(n, total int) string { return fmt.Sprintf("%d OF %d", n, total) }

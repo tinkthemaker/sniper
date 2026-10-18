@@ -165,7 +165,7 @@ func TestEditViaCtrlE(t *testing.T) {
 	ed.body.SetText("Changed body")
 	h.shortcut(shortcutSave)
 
-	if h.m.previewBody.Text != "Changed body" || h.m.previewTitle.Text != "Greeting" {
+	if h.m.previewBody.Text != "Changed body" || h.m.previewTitle.Text != up("Greeting") {
 		t.Errorf("preview = %q / %q", h.m.previewTitle.Text, h.m.previewBody.Text)
 	}
 	if h.m.Status() != "Saved “Greeting”." {

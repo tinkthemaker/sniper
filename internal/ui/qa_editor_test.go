@@ -38,7 +38,7 @@ func TestEditorTitleLimitIs200Runes(t *testing.T) {
 	if h.m.editor != nil || h.selectedTitle() != ok || h.diskTitles()[4] != ok {
 		t.Error("a 200-rune title must save")
 	}
-	if h.m.previewTitle.Text != ok {
+	if h.m.previewTitle.Text != up(ok) {
 		t.Error("preview does not show the long title")
 	}
 }

@@ -1,14 +1,11 @@
 package ui
 
 import (
-	"image/color"
 	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/tinkthemaker/sniper/internal/clipboard"
@@ -59,15 +56,18 @@ type MainWindow struct {
 	count        *widget.RichText
 	search       *searchEntry
 	list         *resultList
-	headerStrip  fyne.CanvasObject
-	keyStrip     fyne.CanvasObject
 	emptyLabel   *widget.Label
+	previewHead  *widget.TextSegment
+	previewLabel *widget.RichText
 	previewTitle *widget.Label
 	previewBody  *widget.Label
 	copyBtn      *widget.Button
 	newBtn       *widget.Button
 	editBtn      *widget.Button
 	deleteBtn    *widget.Button
+	pills        []*pill // the four action pills, in order
+	frame        *frame
+	parts        *panelParts
 	status       *widget.Label
 }
 
@@ -96,69 +96,64 @@ func (m *MainWindow) Status() string              { return m.status.Text }
 
 func (m *MainWindow) build() {
 	m.search = newSearchEntry(m)
+	m.search.TextStyle = fyne.TextStyle{Bold: true}
 	m.search.OnChanged = func(q string) {
 		m.query = q
 		m.refresh("")
 	}
 	m.list = newResultList(m)
+	m.list.HideSeparators = true
 	m.emptyLabel = widget.NewLabel("")
 	m.emptyLabel.Alignment = fyne.TextAlignCenter
 	m.emptyLabel.Wrapping = fyne.TextWrapWord
 
+	m.previewHead = capsSeg(previewLabel, nameLavender, sizeCode)
+	m.previewLabel = widget.NewRichText(m.previewHead)
 	m.previewTitle = widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
 	m.previewTitle.Truncation = fyne.TextTruncateEllipsis
 	m.previewBody = widget.NewLabel("")
 	m.previewBody.Selectable = true
 	m.previewBody.Wrapping = fyne.TextWrapWord
 
-	m.copyBtn = widget.NewButton(labelCopy, m.copySelected)
-	m.copyBtn.Importance = widget.HighImportance
-	m.countSeg = microText("", theme.ColorNamePlaceHolder, false)
+	// COPY is rounded on its left end and DELETE on its right, like the ends of a bar.
+	copyP := newPill(btnCopy, m.copySelected, colOrange, 20, copyHeight/2, 0)
+	newP := newPill(btnNew, m.newSnippet, colPeri, 15, 0, 0)
+	editP := newPill(btnEdit, m.editSelected, colLavender, 15, 0, 0)
+	deleteP := newPill(btnDelete, m.deleteSelected, colRed, 15, 0, buttonHeight/2)
+	m.pills = []*pill{copyP, newP, editP, deleteP}
+	m.copyBtn, m.newBtn, m.editBtn, m.deleteBtn = copyP.btn, newP.btn, editP.btn, deleteP.btn
+
+	m.countSeg = capsSeg("", nameBlack, sizeCode)
 	m.countSeg.Style.Alignment = fyne.TextAlignTrailing
 	m.count = widget.NewRichText(m.countSeg)
-	m.newBtn = widget.NewButton(labelNew, m.newSnippet)
-	m.editBtn = widget.NewButton(labelEdit, m.editSelected)
-	m.deleteBtn = widget.NewButton(labelDelete, m.deleteSelected)
-	// Secondary buttons keep a quiet surface fill rather than going flat: they
-	// still read as buttons, and four visible boxes 8 px apart space evenly.
-	// Copy stays the only ember (primary) button.
-	m.newBtn.Importance, m.editBtn.Importance, m.deleteBtn.Importance = widget.MediumImportance, widget.MediumImportance, widget.MediumImportance
-	m.status = widget.NewLabel("")
-	m.status.Alignment = fyne.TextAlignTrailing
+	m.status = widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
 	m.status.Truncation = fyne.TextTruncateEllipsis
 }
 
-// layout places every region on the grid in chrome.go: strips and rules run
-// full width, everything else sits on the box line, and so all text starts on
-// the text line. Regions are 12 px apart; a header is 8 px from its content.
+// trailing is a column label: black capitals, aligned to the block's right edge.
+func trailing(text string) *widget.RichText {
+	seg := capsSeg(text, nameBlack, sizeCode)
+	seg.Style.Alignment = fyne.TextAlignTrailing
+	return widget.NewRichText(seg)
+}
+
+// layout builds the LCARS frame (lcars.go) around the panel.
 func (m *MainWindow) layout() fyne.CanvasObject {
-	brand := widget.NewRichText(microText(brandName, theme.ColorNameError, true), microText("  "+brandSub, theme.ColorNamePlaceHolder, false))
-	m.headerStrip = strip(container.NewStack(brand, m.count))
-	header := m.headerStrip
-	search := inset(m.search, gapArea, boxLine, gapArea, boxLine)
-	top := container.New(layout.NewCustomPaddedVBoxLayout(0), header, edgeRule(), search)
-
-	// The bottom margin keeps a row scrolled to the end clear of the divider and its grip.
-	listArea := inset(container.NewStack(m.list, container.NewCenter(m.emptyLabel)), 0, boxLine, gapItem, boxLine)
-	previewHead := container.New(layout.NewCustomPaddedVBoxLayout(0),
-		widget.NewRichText(microText(previewLabel, theme.ColorNamePlaceHolder, true)), m.previewTitle)
-	preview := inset(container.NewBorder(previewHead, nil, nil, nil, container.NewVScroll(m.previewBody)),
-		gapItem, boxLine, 0, boxLine)
-	split := container.NewVSplit(container.NewThemeOverride(listArea, denseTheme{NewTheme()}), container.NewThemeOverride(preview, NewTheme()))
-	split.Offset = 0.55
-	divided := container.NewThemeOverride(split, dividerTheme{NewTheme()})
-
-	// The status reports on the buttons, so it shares their row (proximity),
-	// right-aligned so its text ends on the right text line.
-	buttons := container.New(buttonRowLayout{},
-		container.NewThemeOverride(m.copyBtn, bigTextTheme{NewTheme()}), m.newBtn, m.editBtn, m.deleteBtn)
-	status := container.New(vCenterLayout{}, m.status)
-	actions := inset(container.NewBorder(nil, nil, buttons, nil, status), gapArea, boxLine, gapArea, boxLine)
-	m.keyStrip = strip(keyHints())
-	bottom := container.New(layout.NewCustomPaddedVBoxLayout(0), edgeRule(), actions, m.keyStrip)
-	// Tab order follows child order, and NewBorder puts the center first, which
-	// would put the list before the search box; list the children top to bottom (D20).
-	return container.New(layout.NewBorderLayout(top, bottom, nil, nil), top, divided, bottom)
+	parts := &panelParts{
+		search:      container.NewThemeOverride(m.search, searchTheme{NewTheme()}),
+		listArea:    container.NewThemeOverride(container.NewStack(m.list, container.NewCenter(m.emptyLabel)), denseTheme{NewTheme()}),
+		previewHead: m.previewLabel,
+		previewName: container.NewThemeOverride(m.previewTitle, labelTheme{NewTheme(), 22, colOrange}),
+		previewBody: container.NewVScroll(m.previewBody),
+		buttons: container.New(buttonRowLayout{},
+			m.pills[0].obj, m.pills[1].obj, m.pills[2].obj, m.pills[3].obj),
+	}
+	status := container.NewThemeOverride(m.status, labelTheme{NewTheme(), 13, colCanvas})
+	texts := [4]*widget.RichText{m.count, trailing(searchBlockLabel), trailing(previewLabel), trailing(versionText(m.deps.App.Metadata().Version))}
+	var root fyne.CanvasObject
+	m.parts = parts
+	m.frame, root = newFrame(texts, status, newPanel(parts))
+	return root
 }
 
 // refresh recomputes the results for the current query and selects preferID if
@@ -202,18 +197,17 @@ func (m *MainWindow) syncView() {
 
 	sel, has := m.selected()
 	if has {
-		m.previewTitle.SetText(sel.Title)
+		m.previewHead.Text = previewRecordLabel(recordCode(sel.ID))
+		m.previewTitle.SetText(strings.ToUpper(sel.Title))
 		m.previewBody.SetText(sel.Body)
 	} else {
+		m.previewHead.Text = previewLabel
 		m.previewTitle.SetText("")
 		m.previewBody.SetText(previewEmptyText)
 	}
-	for _, b := range []*widget.Button{m.copyBtn, m.editBtn, m.deleteBtn} {
-		if has {
-			b.Enable()
-		} else {
-			b.Disable()
-		}
+	m.previewLabel.Refresh()
+	for _, i := range []int{0, 2, 3} { // COPY, EDIT and DELETE need a selection; NEW never does
+		m.pills[i].setEnabled(has)
 	}
 
 	switch {
@@ -240,13 +234,7 @@ func (m *MainWindow) updateRow(i widget.ListItemID, o fyne.CanvasObject) {
 		return
 	}
 	s := m.results[i]
-	refs.id = s.ID
-	refs.title.SetText(s.Title)
-	refs.bar.FillColor = color.Color(color.Transparent)
-	if s.ID == m.selectedID {
-		refs.bar.FillColor = bloodRed
-	}
-	refs.bar.Refresh()
+	refs.show(s.ID, s.Title, s.ID == m.selectedID)
 }
 
 func (m *MainWindow) onListSelected(i widget.ListItemID) {
