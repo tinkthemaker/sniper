@@ -26,7 +26,7 @@ Build `dist\Sniper.exe` (see [Build from source](#build-from-source)), then doub
 | Ctrl+Z | Undo the last change this session (create, edit, delete, import; up to 20). Also Edit → Undo |
 | Ctrl+S, Escape | Save, cancel (in the editor) |
 
-Help → Keyboard shortcuts shows the same list. To run from source instead: `go run ./cmd/sniper`.
+Help → Keyboard shortcuts shows the same list. The window has three short animations (a flash on copy, a start-up sequence, and an eased selection); they follow Windows' **Animation effects** setting and are off when it is. To run from source instead: `go run ./cmd/sniper`.
 
 The exe is unsigned, so Windows SmartScreen may show "Windows protected your PC" the first time. Choose **More info → Run anyway**.
 

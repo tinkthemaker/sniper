@@ -144,6 +144,15 @@ Rows, double-click and the Copy button (D23). Fixtures live in `internal/ui/test
 29. `TestCapitalsAreDisplayOnly`: rows and the preview title are drawn in capitals, while `Library()` titles, search (either case) and the saved file keep the title as typed.
 30. `TestStatusReadoutShowsStatusMessages`: status messages appear in the bottom readout, which is the widest segment of the bar, ellipsizes a long message, and sits beside the `CTRL+N NEW` and `CTRL+Z UNDO` hints.
 31. `TestVersionBlockShowsVDEVInTests`: the version block reads `VDEV` under the test app, and `versionText` capitalizes real versions.
+32. `TestFieldTextAndCaretClearTheRoundedCorners` and `TestSearchFieldClearsItsRoundedEnd`: in the editor, the first ink of the title and body (the caret sits 1 px left of it and 3 px above) is at least 4 px from the corner curve, measured in the render; the title field is as tall as a plain entry; the search field stays 28 px tall and its text stops before the curve of its right end.
+
+Motion (D29). The harness takes a `Motion` (`harnessMotion`; the zero value means no animation) whose `Run` is a recorder, so a test ticks each animation to 0, 0.5 or 1 by hand. Under the test driver `Animation.Start` runs straight to the end state, so the other tests are unaffected.
+
+33. `TestCopyFlashRunsOnARealCopyOnly`: Enter, the button and a double-click each start one 200 ms flash, the pill and readout are brighter at the start (with black text at 4.5:1 or better) and exactly their resting colors at the end; nothing starts with nothing selected or the button disabled.
+34. `TestStartupLightsTheFrameOnceAndNeverBlocksInput`: the first frame is dark with the labels hidden, the search box has focus and typing filters, halfway the first piece is lit and the last is not, the end state is every block, elbow and divider segment in its color with every label shown, and no second startup follows use or a dialog. `TestStartupDoesNotRunWhenOpeningFromRecovery`.
+35. `TestEverythingIsAtItsEndStateWhenAnimationsAreOff`: with `Enabled` false no animation starts and every color is final at once.
+36. `TestSelectionFadesInAndOutAndRapidMovesLeaveOneHighlight`: one move starts two fades (in, out); before the first tick the new row has not jumped to full; mid-fade both are partway; the end is one orange pill and one clear row; after three quick moves, ticked newest first and then the stale ones, exactly one row is highlighted and it is the selected one.
+37. `TestMotionIsShortAndEndsAtRest`: the default durations are 250 ms or less (startup 300), `systemAnimations` runs, and with the real runner the window ends at rest.
 
 ### Visual review (screenshots without a display)
 

@@ -71,6 +71,18 @@ Rules:
 - **Not ours to align:** the menu bar (`File  Edit  Help`) is window chrome drawn by Fyne with its own padding.
 - **Hover and focus:** a translucent white veil (`#FFFFFF` at 11% and 22%) blended over the pill, so it shows on every pill color. The list's own hover fill is a pill too (the app theme's selection radius is 12).
 
+### Motion
+
+Three short animations, each under 250 ms (flash 200 ms, fade 110 ms, startup 300 ms), each ending in its resting state, after which nothing is redrawn. They follow Windows' **Animation effects** setting (`SystemParametersInfo` with `SPI_GETCLIENTAREAANIMATION`, read once at startup); with it off, every end state shows at once. Other systems: on.
+
+- **Copy flash:** on every successful copy (Enter, the COPY button, double-click) the COPY pill and the status readout brighten by up to 50% toward white and ease back over 200 ms. Never when nothing is selected. Brighter fills only raise the contrast of the black text on them.
+- **Startup:** when the main window first appears, the frame lights up piece by piece (elbows, column blocks, bottom bar, divider segments), staggered across 300 ms. A piece's black label appears when the piece is fully lit, so black text never sits on a half-lit block. Input is never held: the search box is focused from the first frame. It runs once per launch, and not when the main window opens from the recovery window.
+- **Selection fade:** when the selection moves, the new row's pill fades in and the old one fades out over 110 ms. Row text turns black when the pill passes half. Each row has at most one fade; a newer one replaces it, so holding Down or Up never queues anything.
+
+### Text fields
+
+Rounded fields keep their text and caret at least 4 px clear of the curve. The editor's one-line title field is a pill (14 px radius) with its text 8 px from the left edge and a matching spacer on the right, done with a blank entry icon so the field is no taller than a plain one. The multi-line body has an 8 px inner padding, which also moves the first line down and in from the corner. The search field's left end is square and its text stops before the curve of its right end. Labels stay where they were; text indented inside a pill is accepted.
+
 ### Selection rules
 
 | Event | Selection afterwards |
